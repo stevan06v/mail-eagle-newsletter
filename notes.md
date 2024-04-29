@@ -19,6 +19,6 @@
 * log which mails got send
 
 # Libaries
-* Mail sending: https://github.com/Miksus/red-mail
+* Mail sending: [https://github.com/Miksus/red-mail](https://red-mail.readthedocs.io/en/stable/tutorials/getting_started.html)
 * Cron Jobs: https://gaurav-adarshi.medium.com/different-ways-to-schedule-tasks-in-python-45e03d5411ee
 * custom user inputs: https://stackoverflow.com/questions/56342198/python-code-to-read-csv-file-based-on-user-input
