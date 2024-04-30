@@ -48,7 +48,7 @@ def login():
         if user.username == username and user.password == password:
             # Login the user
             login_user(user)
-            return redirect('/')
+            return redirect('/configure')
 
         return render_template('login.html', error='Invalid username or password.')
 
@@ -60,14 +60,22 @@ def logout():
     logout_user()
     return redirect('/login')
 
-
 @app.route('/')
-def admin():
+def index():
+    return redirect('/configure')
+
+@app.route('/configure')
+def configure():
     if not current_user.is_authenticated:
         return redirect('/login')
     else:
-        return render_template('admin.html')
+        return render_template('configure.html')
 
+
+@app.route('/admin')
+@login_required
+def admin():
+    return render_template('admin.html')
 
 # Run the app
 if __name__ == '__main__':
