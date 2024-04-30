@@ -89,7 +89,30 @@
 
     <form class="login" action="/logout" method="GET">
         <h2>Admin Page</h2>
-        <!-- Your form fields go here -->
+        <form method="POST" action="/admin">
+            <label for="smtp_server">SMTP Server:</label>
+            <input type="text" id="smtp_server" name="smtp_server" required><br><br>
+    
+            <label for="smtp_port">SMTP Port:</label>
+            <input type="number" id="smtp_port" name="smtp_port" required><br><br>
+    
+            <label for="sender_email">Sender Email:</label>
+            <input type="email" id="sender_email" name="sender_email" required><br><br>
+    
+            <label for="sender_password">Sender Password:</label>
+            <input type="password" id="sender_password" name="sender_password" required><br><br>
+    
+            <label for="recipient_emails">Recipient Emails</label>
+            <textarea id="recipient_emails" name="recipient_emails" required></textarea><br><br>
+    
+            <label for="message_subject">Email Subject:</label>
+            <input type="text" id="message_subject" name="message_subject" required><br><br>
+    
+            <label for="message_content">Email Message:</label><br>
+            <textarea id="message_content" name="message_content" rows="6" required></textarea><br><br>
+    
+            <input type="submit" value="Send Emails">
+        </form>
         <div class="powered-by">Powered by Webagentur Hochmeir</div>
     </form>
 
