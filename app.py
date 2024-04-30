@@ -2,9 +2,10 @@
 from flask import Flask, render_template, request, session, redirect
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 
+
 # Create a Flask app
 app = Flask(__name__)
-app.secret_key = '89798789jhvjhjg' # accessing session
+app.secret_key = '89798789jhvjhjg' 
 
 # Configure Flask-Login
 login_manager = LoginManager()
@@ -27,7 +28,7 @@ def load_user(user_id):
 
 
 # Create a user
-user = User('admin', 'password')
+user = User('office@sana-bau.com', 'password')
 
 # Register the user with Flask-Login
 login_manager.user_loader(load_user)
@@ -36,7 +37,7 @@ login_manager.user_loader(load_user)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect('/protected')
+        return redirect('/')
 
     if request.method == 'POST':
         # Get the username and password from the request
@@ -47,28 +48,25 @@ def login():
         if user.username == username and user.password == password:
             # Login the user
             login_user(user)
-            return redirect('')
+            return redirect('/')
 
-        # Otherwise, show an error message
         return render_template('login.html', error='Invalid username or password.')
 
-    # Render the login form for GET requests
     return render_template('login.html')
 
 
-# Define a route for the logout page
 @app.route('/logout')
 def logout():
-    # Logout the user
     logout_user()
-    return redirect('/')
+    return redirect('/login')
 
 
-# Define a protected route
-@app.route('/admin')
-@login_required
-def protected():
-    return render_template('admin.html')
+@app.route('/')
+def admin():
+    if not current_user.is_authenticated:
+        return redirect('/login')
+    else:
+        return render_template('admin.html')
 
 
 # Run the app
