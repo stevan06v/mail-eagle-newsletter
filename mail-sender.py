@@ -2,6 +2,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import ssl
+import concurrent.futures  # Import ThreadPoolExecutor for multithreading
 
 sender_email = "test@webhoch.com"
 password = "y4E4-11@m#1"
@@ -36,7 +37,20 @@ def send_html_email(recipient_email, subject, html_content):
     except Exception as e:
         print(f"Failed to send email to {recipient_email}: {e}")
 
-for recipient_email in email_list:
-    send_html_email(recipient_email, "Your Email Subject Here", html_message)
+def send_emails(email_list):
+    subject = "Your Email Subject Here"
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Submit each email for sending concurrently
+        futures = [executor.submit(send_html_email, email, subject, html_message) for email in email_list]
+        
+        # Wait for all tasks to complete
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()  # Ensure we check for any exceptions
+            except Exception as e:
+                print(f"An error occurred: {e}")
+
+# Call the function to send emails using ThreadPoolExecutor
+send_emails(email_list)
 
 print("All HTML emails sent successfully.")
