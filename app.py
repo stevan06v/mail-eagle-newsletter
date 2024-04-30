@@ -1,11 +1,11 @@
 # Import the Flask and Flask-Login libraries
-from flask import Flask, render_template, request, session, redirect
+from flask import Flask, render_template, request, redirect
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
-
+import os
 
 # Create a Flask app
 app = Flask(__name__)
-app.secret_key = '89798789jhvjhjg' 
+app.secret_key = os.urandom(12).hex()
 
 # Configure Flask-Login
 login_manager = LoginManager()
@@ -28,7 +28,7 @@ def load_user(user_id):
 
 
 # Create a user
-user = User('office@sana-bau.com', 'password')
+user = User('admin', 'password')
 
 # Register the user with Flask-Login
 login_manager.user_loader(load_user)
@@ -71,4 +71,4 @@ def admin():
 
 # Run the app
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
