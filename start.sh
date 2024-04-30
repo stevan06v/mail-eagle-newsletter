@@ -1,5 +1,5 @@
-venv venv 
+virtualenv venv
 source venv
 
-pip install -r requirements.py
+pip install -r requirements.txt
 python app.py
