@@ -180,7 +180,7 @@
             <div class="file-upload">
                 <input type="file" id="csv_file" name="csv_file" accept=".csv" required class="file-input">
                 <label for="csv_file" class="custom-file-upload">Choose File</label>
-                <span class="file-name">No file chosen</span>
+                <span class="file-name csv-file-name">No file chosen</span>
             </div>
         </div>
         <div class="form-group">
@@ -196,7 +196,7 @@
             <div class="file-upload">
                 <input type="file" id="html_file" name="html_file" accept=".html" required class="file-input">
                 <label for="html_file" class="custom-file-upload">Choose File</label>
-                <span class="file-name">No file chosen</span>
+                <span class="file-name html-file-name">No file chosen</span>
             </div>
         </div>
         <input type="submit" value="Save CSV Configuration">
@@ -207,7 +207,7 @@
     document.querySelectorAll('.file-input').forEach(input => {
         input.addEventListener('change', function() {
             const fileName = this.files[0].name;
-            const fileNames = document.querySelectorAll('.file-name');
+            const fileNames = this.parentElement.querySelectorAll('.file-name');
             fileNames.forEach(name => name.textContent = fileName);
         });
     });
