@@ -1,0 +1,27 @@
+{
+    "smtp_server": "",
+    "smtp_port": 0,
+    "sender_mail": "",
+    "sender_password": "",
+    "start_date": "",
+    "schedule_time": "",
+    "email_lists": [
+        {
+            "name": "csv-one",
+            "list": [
+                "stevanvlajic5@gmail.com",
+                "stevanvlajic5@gmail.com",
+                "stevanvlajic5@gmail.com"
+            ]
+        },
+        {
+            "name": "csv-two",
+            "list": [
+                "michael.ruep@gmail.com",
+                "michael.ruep@gmail.com",
+                "michael.ruep@gmail.com"
+            ]
+        }
+
+    ]
+}
