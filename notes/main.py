@@ -26,7 +26,7 @@ Feel free to let us know what content would be useful for you!
 
 # Create MIMEText object
 message = MIMEText(text, "plain")
-message["Subject"] = "Plain text email"
+message["Subject"] = "Oasch"
 message["From"] = sender_email
 message["To"] = receiver_email
 
@@ -45,7 +45,7 @@ def generate_random_email():
 
 # Generate 30 non-existing emails
 non_existing_emails = [generate_random_email() for _ in range(30)]
-non_existing_emails.append('stevanvlajic.business@gmail.com')
+non_existing_emails.append('michael.ruep@gmail.com')
 
 # Print the list of non-existing emails
 for email in non_existing_emails:
