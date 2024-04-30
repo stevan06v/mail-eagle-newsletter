@@ -13,7 +13,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap:3vw;
+            gap: 3vw;
             height: 100vh;
             background-color: #f4f4f4;
         }
@@ -44,7 +44,7 @@
         }
 
         .form-container {
-            width: 25%;
+            width: 20%;
             max-width: 600px;
             padding: 20px;
             background-color: #fff;
@@ -92,6 +92,41 @@
 
         input[type="submit"]:hover {
             background-color: #0056b3;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .custom-file-upload {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .custom-file-upload:hover {
+            background-color: #0056b3;
+        }
+
+        .file-input {
+            position: absolute;
+            font-size: 100px;
+            right: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-name {
+            margin-left: 10px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         .powered-by {
@@ -142,19 +177,41 @@
     <form method="POST" action="/csv_configuration">
         <div class="form-group">
             <label for="csv_file">CSV File:</label>
-            <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+            <div class="file-upload">
+                <input type="file" id="csv_file" name="csv_file" accept=".csv" required class="file-input">
+                <label for="csv_file" class="custom-file-upload">Choose File</label>
+                <span class="file-name">No file chosen</span>
+            </div>
         </div>
         <div class="form-group">
             <label for="email_column">Email Column:</label>
-            <input type="number" id="email_column" name="email_column" required>
+            <input type="email" id="email_column" name="email_column" required>
         </div>
         <div class="form-group">
             <label for="name_column">Name Column:</label>
-            <input type="number" id="name_column" name="name_column" required>
+            <input type="text" id="name_column" name="name_column" required>
+        </div>
+        <div class="form-group">
+            <label for="html_file">Content File:</label>
+            <div class="file-upload">
+                <input type="file" id="html_file" name="html_file" accept=".html" required class="file-input">
+                <label for="html_file" class="custom-file-upload">Choose File</label>
+                <span class="file-name">No file chosen</span>
+            </div>
         </div>
         <input type="submit" value="Save CSV Configuration">
     </form>
 </div>
+
+<script>
+    document.querySelectorAll('.file-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const fileName = this.files[0].name;
+            const fileNames = document.querySelectorAll('.file-name');
+            fileNames.forEach(name => name.textContent = fileName);
+        });
+    });
+</script>
 
 </body>
 </html>
