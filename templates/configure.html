@@ -10,38 +10,42 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .container {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 3vw;
-            height: 100vh;
-            background-color: #f4f4f4;
         }
 
         .navbar {
             align-items: center;
             overflow: hidden;
-            width: 100%;
-            position: fixed;
+            position: sticky;
             top: 0;
             left: 0;
             z-index: 1000;
             display: flex;
-            justify-content: flex-start;
+            justify-content:space-between;
+            margin-left: 2vw;
+            margin-right: 2vw;
+
         }
 
         .logout-btn {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
+            background-color: #fff;
+            color: #007bff;
+            border: 1px solid #007bff; /* Add border to button */
             border-radius: 4px;
             padding: 8px 16px;
             cursor: pointer;
-            margin-left: 20px;
         }
 
         .logout-btn:hover {
             background-color: #0056b3;
+            color: #fff;
         }
 
         .form-container {
@@ -52,7 +56,7 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center; /* Center the form */
-            margin-top: 20px;
+            margin-top: 80px; /* Adjust margin from the top */
         }
 
         .form-group {
@@ -140,68 +144,85 @@
         .form-container + .form-container {
             margin-top: 40px;
         }
+        .nav-box{
+            display: flex;
+            gap: 1vw;
+            
+        }
+        a{
+            color: #007bff; 
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
 
-<div class="navbar">
-    <form action="/logout" method="GET">
-        <input type="submit" class="logout-btn" value="Logout">
-    </form>
-</div>
 
-<div class="form-container">
-    <h2>Mail Credentials</h2>
-    <form method="POST" action="/mail_credentials">
-        <div class="form-group">
-            <label for="smtp_server">SMTP Server:</label>
-            <input type="text" id="smtp_server" name="smtp_server" required>
+    <div class="navbar">
+        <form action="/logout" method="GET">
+            <input type="submit" class="logout-btn" value="Logout">
+        </form>
+        <div class="nav-box">
+            <a href="/configure">CONFIGURE</a>
+            <a href="/admin">ADMIN</a>
         </div>
-        <div class="form-group">
-            <label for="smtp_port">SMTP Port:</label>
-            <input type="number" id="smtp_port" name="smtp_port" required>
-        </div>
-        <div class="form-group">
-            <label for="sender_email">Sender Email:</label>
-            <input type="email" id="sender_email" name="sender_email" required>
-        </div>
-        <div class="form-group">
-            <label for="sender_password">Sender Password:</label>
-            <input type="password" id="sender_password" name="sender_password" required>
-        </div>
-        <input type="submit" value="Save">
-    </form>
-</div>
+       
+    </div>
+    
+    <div class="container">
+    <div class="form-container">
+        <h2>Mail Credentials</h2>
+        <form method="POST" action="/mail_credentials">
+            <div class="form-group">
+                <label for="smtp_server">SMTP Server:</label>
+                <input type="text" id="smtp_server" name="smtp_server" required>
+            </div>
+            <div class="form-group">
+                <label for="smtp_port">SMTP Port:</label>
+                <input type="number" id="smtp_port" name="smtp_port" required>
+            </div>
+            <div class="form-group">
+                <label for="sender_email">Sender Email:</label>
+                <input type="email" id="sender_email" name="sender_email" required>
+            </div>
+            <div class="form-group">
+                <label for="sender_password">Sender Password:</label>
+                <input type="password" id="sender_password" name="sender_password" required>
+            </div>
+            <input type="submit" value="Save">
+        </form>
+    </div>
 
-<div class="form-container">
-    <h2>Newsletter-Config</h2>
-    <form method="POST" action="/csv_configuration">
-        <div class="form-group">
-            <label for="csv_file">CSV Files:</label>
-            <div class="file-upload">
-                <input type="file" id="csv_file" name="csv_file" accept=".csv" required multiple class="file-input">
-                <label for="csv_file" class="custom-file-upload">Choose File</label>
-                <span class="file-name csv-file-name">No file chosen</span>
+    <div class="form-container">
+        <h2>Newsletter-Config</h2>
+        <form method="POST" action="/csv_configuration">
+            <div class="form-group">
+                <label for="csv_file">CSV Files:</label>
+                <div class="file-upload">
+                    <input type="file" id="csv_file" name="csv_file" accept=".csv" required multiple class="file-input">
+                    <label for="csv_file" class="custom-file-upload">Choose File</label>
+                    <span class="file-name csv-file-name">No file chosen</span>
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <label for="email_column">Email Column:</label>
-            <input type="email" id="email_column" name="email_column" required>
-        </div>
-        <div class="form-group">
-            <label for="subject_column">Subject:</label>
-            <input type="text" id="subject_column" name="subject_column" required>
-        </div>
-        <div class="form-group">
-            <label for="html_file">Content File:</label>
-            <div class="file-upload">
-                <input type="file" id="html_file" name="html_file" accept=".html" required class="file-input">
-                <label for="html_file" class="custom-file-upload">Choose File</label>
-                <span class="file-name html-file-name">No file chosen</span>
+            <div class="form-group">
+                <label for="email_column">Email Column:</label>
+                <input type="email" id="email_column" name="email_column" required>
             </div>
-        </div>
-        <input type="submit" value="Save">
-    </form>
+            <div class="form-group">
+                <label for="subject_column">Subject:</label>
+                <input type="text" id="subject_column" name="subject_column" required>
+            </div>
+            <div class="form-group">
+                <label for="html_file">Content File:</label>
+                <div class="file-upload">
+                    <input type="file" id="html_file" name="html_file" accept=".html" required class="file-input">
+                    <label for="html_file" class="custom-file-upload">Choose File</label>
+                    <span class="file-name html-file-name">No file chosen</span>
+                </div>
+            </div>
+            <input type="submit" value="Save">
+        </form>
+    </div>
 </div>
 
 <script>
