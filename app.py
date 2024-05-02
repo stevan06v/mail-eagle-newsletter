@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, redirect
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 import os
+from dataclasses import dataclass
 
 # Create a Flask app
 app = Flask(__name__)
@@ -10,6 +11,22 @@ app.secret_key = os.urandom(12).hex()
 # Configure Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+
+@dataclass
+class EmailUser:
+    def __init__(self, _smtp_server: str, _smtp_port: int, _sender: str, _password: str):
+        self.email = _smtp_server
+        self.smtp_port = _smtp_port
+        self.sender = _sender
+        self.password = _sender
+
+
+@dataclass
+class EmailListEntry:
+    def __init__(self, _name: str, _emails: list):
+        self.name = _name
+        self.email_list = _emails
 
 
 # Define a User model
@@ -60,9 +77,11 @@ def logout():
     logout_user()
     return redirect('/login')
 
+
 @app.route('/')
 def index():
     return redirect('/configure')
+
 
 @app.route('/configure')
 def configure():
@@ -77,6 +96,8 @@ def configure():
 def admin():
     return render_template('admin.html')
 
+
 # Run the app
 if __name__ == '__main__':
     app.run(debug=True)
+
