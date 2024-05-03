@@ -1,35 +1,20 @@
-# Import the Flask and Flask-Login libraries
-from datetime import datetime
-
-from flask import Flask, render_template, request, redirect
+from flask_bootstrap import Bootstrap5
+from flask import Flask, render_template, request, flash, redirect, url_for
+from flask_wtf import FlaskForm, CSRFProtect
+from wtforms.fields import *
+from wtforms.validators import DataRequired, Length, Regexp
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
-import os
-from dataclasses import dataclass
+from secrets import compare_digest
 
-# Create a Flask app
 app = Flask(__name__)
-app.secret_key = os.urandom(12).hex()
 
-# Configure Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
+app.secret_key = 'dev'
 
+login_manager = LoginManager(app)
 
-@dataclass
-class EmailUser:
-    def __init__(self, _smtp_server: str, _smtp_port: int, _sender: str, _password: str):
-        self.email = _smtp_server
-        self.smtp_port = _smtp_port
-        self.sender = _sender
-        self.password = _sender
+bootstrap = Bootstrap5(app)
 
-
-@dataclass
-class EmailListEntry:
-    def __init__(self, _name: str, _emails: list, _schedule_date: datetime):
-        self.name = _name
-        self.schedule_date = _schedule_date
-        self.email_list = _emails
+csrf = CSRFProtect(app)
 
 
 # Define a User model
@@ -47,32 +32,35 @@ def load_user(user_id):
     return user if user.get_id() == user_id else None
 
 
-# Create a user
 user = User('admin', 'password')
 
 # Register the user with Flask-Login
 login_manager.user_loader(load_user)
 
 
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(1, 20)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(8, 150)])
+    submit = SubmitField()
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect('/')
 
-    if request.method == 'POST':
-        # Get the username and password from the request
-        username = request.form['username']
-        password = request.form['password']
+    form = LoginForm()
 
-        # Check if the username and password are valid
-        if user.username == username and user.password == password:
+    if form.validate_on_submit():
+        if user.username == form.username.data and compare_digest(user.password, form.password.data):
             # Login the user
             login_user(user)
-            return redirect('/configure')
 
-        return render_template('login.html', error='Invalid username or password.')
+            flash('Successfully logged in!')
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', form=form, error='Invalid username or password')
 
-    return render_template('login.html')
+    return render_template('login.html', form=form)
 
 
 @app.route('/logout')
@@ -81,26 +69,14 @@ def logout():
     return redirect('/login')
 
 
+
 @app.route('/')
 def index():
-    return redirect('/configure')
-
-
-@app.route('/configure')
-def configure():
     if not current_user.is_authenticated:
         return redirect('/login')
     else:
-        return render_template('configure.html')
+        return render_template('index.html')
 
 
-@app.route('/admin')
-@login_required
-def admin():
-    return render_template('admin.html')
-
-
-# Run the app
-if __name__ == '__main__':
-    app.run(debug=True)
+app.run(debug=True)
 
