@@ -1,4 +1,6 @@
 # Import the Flask and Flask-Login libraries
+from datetime import datetime
+
 from flask import Flask, render_template, request, redirect
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 import os
@@ -24,8 +26,9 @@ class EmailUser:
 
 @dataclass
 class EmailListEntry:
-    def __init__(self, _name: str, _emails: list):
+    def __init__(self, _name: str, _emails: list, _schedule_date: datetime):
         self.name = _name
+        self.schedule_date = _schedule_date
         self.email_list = _emails
 
 
