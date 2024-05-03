@@ -3,6 +3,12 @@ This repository is a simple python application which send based on custom define
 
 # START
 
+* Copy `.env.example` to `.env`
+```bash
+mv .enx.example .env
+```
+
+
 ```bash
 bash start.sh
 ```

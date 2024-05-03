@@ -31,7 +31,8 @@
           <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
             <ul class="navbar-nav">
                 {{ render_nav_item('index', 'Home') }}
-                {{ render_nav_item('configure', 'Configure Email') }}
+                {{ render_nav_item('configure', 'Sender-Email') }}
+                {{ render_nav_item('configure_emails', 'Client-Email-Lists') }}
             </ul>
             <form action="{{ url_for('logout') }}" method="GET" class="d-flex">
                 <button type="submit" class="btn btn-primary">Logout</button>

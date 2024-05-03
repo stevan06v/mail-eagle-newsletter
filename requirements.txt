@@ -3,3 +3,4 @@ flask-bootstrap
 flask-Login
 flask-wtf
 python-jsonstore
+python-dotenv

@@ -1,12 +1,16 @@
+import os
+
 from flask_bootstrap import Bootstrap5
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_wtf import FlaskForm, CSRFProtect
 from jsonstore import JsonStore
 from wtforms.fields import *
+from dotenv import load_dotenv
 from wtforms.validators import DataRequired, Length, Regexp
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from secrets import compare_digest
 
+load_dotenv()
 
 store = JsonStore('config.json')
 
@@ -36,7 +40,7 @@ def load_user(user_id):
     return user if user.get_id() == user_id else None
 
 
-user = User('admin', 'password')
+user = User(os.getenv('LOGIN'), os.getenv('PASSWORD'))
 
 # Register the user with Flask-Login
 login_manager.user_loader(load_user)
@@ -50,7 +54,7 @@ class LoginForm(FlaskForm):
 
 class SenderEmailCredentials(FlaskForm):
     smtp_server = StringField('SMTP-Server', validators=[DataRequired()])
-    smtp_port = StringField('SMTP-Port', validators=[DataRequired()])
+    smtp_port = IntegerField('SMTP-Port', validators=[DataRequired()])
     sender_email = EmailField('Sender-Email', validators=[DataRequired()])
     sender_password = PasswordField('Sender-Password', validators=[DataRequired()])
 
@@ -91,14 +95,44 @@ def index():
         return render_template('index.html')
 
 
-@app.route('/configure')
+@app.route('/configure', methods=['GET', 'POST'])
+@login_required
 def configure():
-    if not current_user.is_authenticated:
-        return redirect('/login')
-    else:
-        return render_template('configure.html', email_sender=store['email_sender'])
+    form = SenderEmailCredentials()
+    if request.method == 'POST' and form.validate_on_submit():
+        # Process form data
+        smtp_server = form.smtp_server.data
+        smtp_port = form.smtp_port.data
+        sender_email = form.sender_email.data
+        sender_password = form.sender_password.data
+
+        store['email_sender.smtp_server'] = smtp_server
+        store['email_sender.smtp_port'] = smtp_port
+        store['email_sender.sender_email'] = sender_email
+        store['email_sender.sender_password'] = sender_password
+
+        flash('Email sender configuration saved successfully!', 'success')
+
+        return redirect(url_for('configure'))
+
+    # Load existing data if available
+    form.smtp_server.data = store['email_sender.smtp_server']
+    form.smtp_port.data = store['email_sender.smtp_port']
+    form.sender_email.data = store['email_sender.sender_email']
+    form.sender_password.data = store['email_sender.sender_password']
+
+    return render_template('configure.html', form=form, email_sender=store['email_sender'])
 
 
+class ConfigureEmailListForm(FlaskForm):
+    name = StringField('Username', validators=[DataRequired(), Length(1, 20)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(8, 150)])
+    submit = SubmitField()
+
+@app.route('/configure-emails', methods=['GET', 'POST'])
+@login_required
+def configure_emails():
+    return render_template('configure-emails.html')
 
 app.run(debug=True)
 
