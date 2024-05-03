@@ -6,3 +6,9 @@ This repository is a simple python application which send based on custom define
 ```bash
 bash start.sh
 ```
+
+# RESOLVE ACCESS DENIED
+
+```bash
+chrome://net-internals/#sockets
+```

@@ -1,10 +1,11 @@
 {
-    "smtp_server": "",
-    "smtp_port": 0,
-    "sender_mail": "",
-    "sender_password": "",
-    "start_date": "",
-    "schedule_time": "",
+    "email_sender": {
+        "smtp_server": "",
+        "smtp_port": 0,
+        "sender_mail": "",
+        "sender_password": ""
+    },
+    "send_date": "",
     "email_lists": [
         {
             "name": "csv-one.csv",
