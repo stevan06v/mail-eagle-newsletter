@@ -18,3 +18,7 @@ bash start.sh
 ```bash
 chrome://net-internals/#sockets
 ```
+
+# BOOTSTRAP FLASK DOCS
+
+* https://bootstrap-flask-example.azurewebsites.net/form

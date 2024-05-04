@@ -4,3 +4,4 @@ flask-Login
 flask-wtf
 python-jsonstore
 python-dotenv
+pandas

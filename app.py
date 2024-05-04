@@ -1,8 +1,9 @@
 import os
-
+import pandas as pd
 from flask_bootstrap import Bootstrap5
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_wtf import FlaskForm, CSRFProtect
+from flask_wtf.file import FileAllowed, FileRequired
 from jsonstore import JsonStore
 from wtforms.fields import *
 from dotenv import load_dotenv
@@ -124,15 +125,54 @@ def configure():
     return render_template('configure.html', form=form, email_sender=store['email_sender'])
 
 
-class ConfigureEmailListForm(FlaskForm):
-    name = StringField('Username', validators=[DataRequired(), Length(1, 20)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(8, 150)])
-    submit = SubmitField()
+class JobForm(FlaskForm):
+    name = StringField('Job Name', description="Define a name to identify the job later on.",
+                       validators=[DataRequired()])
+    csv = FileField(label="Email List as CSV", description="Input the HTML Newsletter Content File.",
+                    validators=[FileAllowed(['csv']), FileRequired()])
+    column = StringField('Email Column Name', description="Use the exact name of your CSV Email Column.",
+                         validators=[DataRequired()])
+    subject = StringField(description="Set a subject for the email.",
+                          validators=[DataRequired()])
+    content = FileField(description="Input the HTML Newsletter Content File.",
+                        validators=[FileAllowed(['html'], FileRequired())])
+    date = DateTimeLocalField(description="This field indicates the date when the newsletter should be sent.",
+                              validators=[DataRequired()])
+    submit = SubmitField('Add')
 
-@app.route('/configure-emails', methods=['GET', 'POST'])
+
+
+@app.route('/jobs', methods=['GET', 'POST'])
 @login_required
-def configure_emails():
-    return render_template('configure-emails.html')
+def jobs():
+    form = JobForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        try:
+            # Handle file uploads
+            csv_file = form.csv.data
+            content_file = form.content.data
+
+            # Save uploaded files to a folder
+            if csv_file:
+                csv_file_path = os.path.join('uploads', csv_file.filename)
+                csv_file.save(csv_file_path)
+            if content_file:
+                content_file_path = os.path.join('uploads', content_file.filename)
+                content_file.save(content_file_path)
+
+            store['email_sender.smtp_server']
+            name = form.name.data
+            column = form.column.data
+            subject = form.subject.data
+            date = form.date.data
+
+            flash("Successfully created job!", 'success')
+            return redirect(url_for('jobs'))
+        except Exception as e:
+            flash(f"An error occurred: {e}", 'error')
+
+    return render_template('jobs.html', form=form)
+
 
 app.run(debug=True)
 
