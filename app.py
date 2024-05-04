@@ -1,3 +1,4 @@
+import csv
 import os
 import pandas as pd
 from flask_bootstrap import Bootstrap5
@@ -5,8 +6,10 @@ from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_wtf import FlaskForm, CSRFProtect
 from flask_wtf.file import FileAllowed, FileRequired
 from jsonstore import JsonStore
+from pandas.errors import EmptyDataError
 from wtforms.fields import *
 from dotenv import load_dotenv
+import uuid
 from wtforms.validators import DataRequired, Length, Regexp
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from secrets import compare_digest
@@ -141,6 +144,27 @@ class JobForm(FlaskForm):
     submit = SubmitField('Add')
 
 
+def parse_csv_column(csv_file_path, column_name):
+    try:
+        column_data = []
+        with open(csv_file_path, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file)
+            header = next(csv_reader)  # Get the header row
+            if column_name in header:
+                column_index = header.index(column_name)
+                for row in csv_reader:
+                    if 0 <= column_index < len(row):
+                        column_data.append(row[column_index])
+                    else:
+                        raise IndexError(f"Column index {column_index} out of range.")
+            else:
+                raise ValueError(f"Column '{column_name}' not found in CSV file header.")
+
+        return column_data
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return []
+
 
 @app.route('/jobs', methods=['GET', 'POST'])
 @login_required
@@ -148,23 +172,32 @@ def jobs():
     form = JobForm()
     if request.method == 'POST' and form.validate_on_submit():
         try:
-            # Handle file uploads
             csv_file = form.csv.data
             content_file = form.content.data
 
-            # Save uploaded files to a folder
+            csv_filename = str(uuid.uuid4()) + '.csv'
+            content_filename = str(uuid.uuid4()) + '.html'
+
+            uploads_folder = os.path.join(app.root_path, 'uploads')
+            csv_file_path = os.path.join(uploads_folder, csv_filename)
+            content_file_path = os.path.join(uploads_folder, content_filename)
+
+            # Save files
             if csv_file:
-                csv_file_path = os.path.join('uploads', csv_file.filename)
                 csv_file.save(csv_file_path)
             if content_file:
-                content_file_path = os.path.join('uploads', content_file.filename)
                 content_file.save(content_file_path)
 
-            store['email_sender.smtp_server']
-            name = form.name.data
-            column = form.column.data
-            subject = form.subject.data
-            date = form.date.data
+            job = {
+                "name": form.name.data,
+                "subject": form.subject.data,
+                "csv_path": csv_file_path,
+                "schedule_date": form.date.data,
+                "content_file_path": content_file_path,
+                "list": parse_csv_column(csv_file_path, form.column.data)
+            }
+
+            print(job)
 
             flash("Successfully created job!", 'success')
             return redirect(url_for('jobs'))
