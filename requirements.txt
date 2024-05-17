@@ -5,5 +5,4 @@ flask-wtf
 wtforms
 python-jsonstore
 python-dotenv
-jsonstore
 pandas

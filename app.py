@@ -143,12 +143,11 @@ class JobForm(FlaskForm):
                               validators=[DataRequired()])
     submit = SubmitField('Add')
 
-
 def parse_csv_column(csv_file_path, column_name):
     try:
         column_data = []
         with open(csv_file_path, 'r') as csv_file:
-            csv_reader = csv.reader(csv_file)
+            csv_reader = csv.reader(csv_file, delimiter=';')  # Specify the delimiter
             header = next(csv_reader)  # Get the header row
             if column_name in header:
                 column_index = header.index(column_name)
@@ -192,12 +191,13 @@ def jobs():
                 "name": form.name.data,
                 "subject": form.subject.data,
                 "csv_path": csv_file_path,
-                "schedule_date": form.date.data,
+                "schedule_date": form.date.data.strftime('%m/%d/%Y'),
                 "content_file_path": content_file_path,
                 "list": parse_csv_column(csv_file_path, form.column.data)
             }
 
-            print(job)
+            store['jobs'] += [job]
+            print(store['jobs'])
 
             flash("Successfully created job!", 'success')
             return redirect(url_for('jobs'))
@@ -208,4 +208,3 @@ def jobs():
 
 
 app.run(debug=True)
-
