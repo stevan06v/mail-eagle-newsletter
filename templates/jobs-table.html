@@ -1,0 +1,17 @@
+{% from 'bootstrap5/table.html' import render_table %}
+
+<div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <button class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#jobsTable" aria-expanded="true" aria-controls="jobsTable">
+          Jobs Table
+        </button>
+      </h5>
+    </div>
+
+    <div id="jobsTable" class="collapse show" aria-labelledby="headingOne">
+      <div class="card-body">
+            {{ render_table(jobs, responsive=True, responsive_class='table-responsive-sm') }}
+      </div>
+    </div>
+  </div>

@@ -7,60 +7,11 @@
   },
   "jobs": [
     {
-      "name": "csv-one.csv",
-      "schedule_date": "09-01-2023 12:15:23",
-      "newsletter_content": "",
-      "csv_path": "",
-      "subject": "",
-      "list": [
-        "stevanvlajic5@gmail.com",
-        "stevanvlajic5@gmail.com",
-        "stevanvlajic5@gmail.com"
-      ],
-      "status": {
-        "pending": false,
-        "success": true
-      }
-    },
-    {
-      "name": "csv-one.csv",
-      "schedule_date": "09-01-2023 12:15:23",
-      "newsletter_content": "",
-      "csv_path": "",
-      "content_file_path": "",
-      "subject": "",
-      "list": [
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com"
-      ],
-      "status": {
-        "pending": false,
-        "success": true
-      }
-    },
-    {
-      "name": "csv-one.csv",
-      "schedule_date": "09-01-2023 12:15:23",
-      "newsletter_content": "",
-      "csv_path": "",
-      "subject": "",
-      "list": [
-        "stevanvlajic5@gmail.com",
-        "stevanvlajic5@gmail.com",
-        "stevanvlajic5@gmail.com"
-      ],
-      "status": {
-        "pending": false,
-        "success": true
-      }
-    },
-    {
       "name": "Hallo Welt",
       "subject": "Test",
-      "csv_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/d308fcdf-e2d7-45f1-8a94-fa4a56ac44f4.csv",
-      "schedule_date": "05/26/2024",
-      "content_file_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/ddbc20ef-6da5-467b-ab2d-c1f2bbea1623.html",
+      "csv_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/da27c9f8-a705-418e-b305-b9c09d840042.csv",
+      "schedule_date": "05/18/2024",
+      "content_file_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/5a15d576-942f-4b7c-9675-7ad0a5040fb3.html",
       "list": [
         "info@0211bau.de",
         "info@classic-immobilien-gera.de",

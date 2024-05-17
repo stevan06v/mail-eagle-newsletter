@@ -2,13 +2,13 @@
 <div class="card mb-4">
     <div class="card-header">
       <h5 class="mb-0">
-        <button class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#emailSender" aria-expanded="true" aria-controls="emailSender">
+        <button class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#jobsForm" aria-expanded="true" aria-controls="jobsForm">
           Jobs Form
         </button>
       </h5>
     </div>
 
-    <div id="emailSender" class="collapse show" aria-labelledby="headingOne">
+    <div id="jobsForm" class="collapse show" aria-labelledby="headingOne">
       <div class="card-body">
             <form method="POST" enctype="multipart/form-data">
                 {{ render_form(form) }}

@@ -1,6 +1,7 @@
 import csv
 import os
 import pandas as pd
+import json
 from flask_bootstrap import Bootstrap5
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_wtf import FlaskForm, CSRFProtect
@@ -143,6 +144,7 @@ class JobForm(FlaskForm):
                               validators=[DataRequired()])
     submit = SubmitField('Add')
 
+
 def parse_csv_column(csv_file_path, column_name):
     try:
         column_data = []
@@ -163,6 +165,10 @@ def parse_csv_column(csv_file_path, column_name):
     except Exception as e:
         print(f"An error occurred: {e}")
         return []
+
+class TableData:
+    def __init__(self, data):
+        self.__table__ = data
 
 
 @app.route('/jobs', methods=['GET', 'POST'])
@@ -197,6 +203,7 @@ def jobs():
             }
 
             store['jobs'] += [job]
+
             print(store['jobs'])
 
             flash("Successfully created job!", 'success')
@@ -204,7 +211,7 @@ def jobs():
         except Exception as e:
             flash(f"An error occurred: {e}", 'error')
 
-    return render_template('jobs.html', form=form)
+    return render_template('jobs.html', form=form, jobs=[])
 
 
 app.run(debug=True)
