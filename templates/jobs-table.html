@@ -11,7 +11,16 @@
 
     <div id="jobsTable" class="collapse show" aria-labelledby="headingOne">
       <div class="card-body">
-            {{ render_table(jobs, responsive=True, responsive_class='table-responsive-sm') }}
+            {{
+            render_table(
+                    table_data,
+                    titles=table_data.titles,
+                    responsive=True,
+                    responsive_class='table-responsive-sm',
+                    show_actions=True,
+                    delete_url=('delete_job', [('job_id', ':id')])
+                )
+            }}
       </div>
     </div>
   </div>

@@ -166,9 +166,15 @@ def parse_csv_column(csv_file_path, column_name):
         print(f"An error occurred: {e}")
         return []
 
+
 class TableData:
-    def __init__(self, data):
-        self.__table__ = data
+    def __init__(self, data, titles):
+        self.data = data
+        self.titles = titles
+
+    def __iter__(self):
+        for item in self.data:
+            yield item
 
 
 @app.route('/jobs', methods=['GET', 'POST'])
@@ -194,10 +200,13 @@ def jobs():
                 content_file.save(content_file_path)
 
             job = {
+                "id": len(store['jobs']) + 1,
                 "name": form.name.data,
                 "subject": form.subject.data,
+                "is_scheduled": False,
+                "is_finished": False,
                 "csv_path": csv_file_path,
-                "schedule_date": form.date.data.strftime('%m/%d/%Y'),
+                "schedule_date": form.date.data.strftime('%m/%d/%Y %H:%M:%S'),
                 "content_file_path": content_file_path,
                 "list": parse_csv_column(csv_file_path, form.column.data)
             }
@@ -211,7 +220,40 @@ def jobs():
         except Exception as e:
             flash(f"An error occurred: {e}", 'error')
 
-    return render_template('jobs.html', form=form, jobs=[])
+    jobs_data = [
+        {
+            'id': job['id'],
+            'name': job['name'],
+            'subject': job['subject'],
+            'schedule_date': job['schedule_date'],
+            'is_scheduled': job['is_scheduled'],
+            'is_finished': job['is_finished']
+        }
+        for job in store['jobs']
+    ]
+
+    titles = [('id', 'ID'),
+              ('name', 'Name'),
+              ('subject', 'Subject'),
+              ('schedule_date', 'Schedule Date'),
+              ('is_scheduled', 'Is Scheduled'),
+              ('is_finished', 'Is Finished'),
+    ]
+
+    table_data = TableData(jobs_data, titles)
+
+    return render_template('jobs.html', form=form, table_data=table_data)
+
+
+@app.route('/delete/<int:job_id>', methods=['POST'])
+@login_required
+def delete_job(job_id):
+    store['jobs'] = [job for job in store['jobs'] if job['id'] != job_id]
+    flash(f"Job[{job_id}] successfully deleted!", 'success')
+    return redirect(url_for('jobs'))
 
 
 app.run(debug=True)
+
+
+
