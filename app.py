@@ -253,6 +253,24 @@ def delete_job(job_id):
     return redirect(url_for('jobs'))
 
 
+@app.route('/schedule/<int:job_id>', methods=['GET'])
+@login_required
+def schedule_job(job_id):
+    jobs_temp = store['jobs']
+    for job in jobs_temp:
+        if job['id'] == job_id:
+            if job['is_scheduled']:
+                flash(f"Job[{job_id}] is already scheduled!", 'warning')
+            else:
+                # TODO: Implement scheduling logic & scheduler
+                job['is_scheduled'] = True
+                store['jobs'] = jobs_temp
+                flash(f"Job[{job_id}] successfully scheduled!", 'success')
+            break
+
+    return redirect(url_for('jobs'))
+
+
 app.run(debug=True)
 
 

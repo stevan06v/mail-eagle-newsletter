@@ -18,7 +18,14 @@
                     responsive=True,
                     responsive_class='table-responsive-sm',
                     show_actions=True,
-                    delete_url=('delete_job', [('job_id', ':id')])
+                    delete_url=('delete_job', [('job_id', ':id')]),
+                    custom_actions=[
+                    (
+                        'Schedule',
+                        'clipboard-plus',
+                        ('schedule_job', [('job_id', ':id')])
+                    )
+                ]
                 )
             }}
       </div>

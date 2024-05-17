@@ -2,9 +2,18 @@
 
 {% block content %}
 
-<h1>Newsletter Application</h1>
-<p>Import your CSV-files and send scheduled emails with customized content </p>
+<div class="container mt-4">
+    <div class="row align-items-center">
+        <div class="col-md-2">
+            <img src="{{ url_for('static', filename='images/mail-eagle-logo.svg') }}" alt="Mail Eagle Logo" class="img-fluid">
+        </div>
+        <div class="col-md-10">
+            <h1>Newsletter Application</h1>
+            <p>Import your CSV-files and send scheduled emails with customized content</p>
+        </div>
+    </div>
 
-{% include 'user-data.html' %}
+    {% include 'user-data.html' %}
+</div>
 
 {% endblock %}
