@@ -245,15 +245,17 @@ def jobs():
     return render_template('jobs.html', form=form, table_data=table_data)
 
 
-def send_mail():
+def send_mail(emails):
     # TODO: Implement Email-Sending-logic
     print("sending....")
     pass
 
 
-def send_delayed_mails(delay):
+def send_delayed_mails(delay, job):
+    print(f"Starting job[{job['name']}] with delay: {delay}s")
     time.sleep(delay)
-    send_mail()
+    send_mail(emails=job['list'])
+    # TODO: SET JOB-json is_scheduled = false, is_finished=true + redirect to show changes
 
 
 class MailJob:
@@ -279,8 +281,7 @@ class MailsJobScheduler:
         if delay < 0:
             raise AttributeError('The target datetime is below the start time!')
 
-        job_thread = threading.Thread(target=send_delayed_mails, args=delay, daemon=True)
-        # TODO: Fix this --> function runs into an error because of the dekay
+        job_thread = threading.Thread(target=send_delayed_mails, args=(delay, job, ), daemon=True)
         job_thread.start()
 
         mail_job = MailJob(job_thread, job)
