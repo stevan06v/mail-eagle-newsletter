@@ -1,15 +1,15 @@
 import csv
 import os
-import pandas as pd
-import json
 from flask_bootstrap import Bootstrap5
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_wtf import FlaskForm, CSRFProtect
 from flask_wtf.file import FileAllowed, FileRequired
 from jsonstore import JsonStore
-from pandas.errors import EmptyDataError
+import time
 from wtforms.fields import *
 from dotenv import load_dotenv
+import threading
+from datetime import datetime
 import uuid
 from wtforms.validators import DataRequired, Length, Regexp
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
@@ -245,10 +245,62 @@ def jobs():
     return render_template('jobs.html', form=form, table_data=table_data)
 
 
+def send_mail():
+    # TODO: Implement Email-Sending-logic
+    print("sending....")
+    pass
+
+
+def send_delayed_mails(delay):
+    time.sleep(delay)
+    send_mail()
+
+
+class MailJob:
+    def __init__(self, _job_thread, _job):
+        self.job_thread = _job_thread
+        self.job = _job
+
+    def stop_job_thread(self):
+        if self.job_thread.is_alive():
+            self.job_thread._stop()
+            return True
+        return False
+
+
+class MailsJobScheduler:
+    def __init__(self):
+        self.mail_jobs = []
+
+    def schedule_job(self, job):
+        now = datetime.now()
+        delay = (datetime.strptime(job["schedule_date"], "%m/%d/%Y %H:%M:%S") - now).total_seconds()
+
+        if delay < 0:
+            raise AttributeError('The target datetime is below the start time!')
+
+        job_thread = threading.Thread(target=send_delayed_mails, args=delay, daemon=True)
+        # TODO: Fix this --> function runs into an error because of the dekay
+        job_thread.start()
+
+        mail_job = MailJob(job_thread, job)
+
+        self.mail_jobs.append(mail_job)
+
+    def stop_job_thread(self, job_id):
+        for iterator in self.mail_jobs:
+            if iterator.job["job_id"] == job_id:
+                return iterator.stop_job_thread()
+
+
+mails_job_scheduler = MailsJobScheduler()
+
+
 @app.route('/delete/<int:job_id>', methods=['POST'])
 @login_required
 def delete_job(job_id):
     store['jobs'] = [job for job in store['jobs'] if job['id'] != job_id]
+    mails_job_scheduler.stop_job_thread(job_id)
     flash(f"Job[{job_id}] successfully deleted!", 'success')
     return redirect(url_for('jobs'))
 
@@ -262,7 +314,8 @@ def schedule_job(job_id):
             if job['is_scheduled']:
                 flash(f"Job[{job_id}] is already scheduled!", 'warning')
             else:
-                # TODO: Implement scheduling logic & scheduler
+                # schedule job
+                mails_job_scheduler.schedule_job(job)
                 job['is_scheduled'] = True
                 store['jobs'] = jobs_temp
                 flash(f"Job[{job_id}] successfully scheduled!", 'success')
@@ -272,6 +325,3 @@ def schedule_job(job_id):
 
 
 app.run(debug=True)
-
-
-

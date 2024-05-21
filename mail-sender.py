@@ -19,6 +19,7 @@ with open('msg.txt', 'r', encoding='utf-8') as file:
 
 context = ssl.create_default_context()
 
+
 def send_html_email(recipient_email, subject, html_content):
     try:
         message = MIMEMultipart()
@@ -37,6 +38,7 @@ def send_html_email(recipient_email, subject, html_content):
     except Exception as e:
         print(f"Failed to send email to {recipient_email}: {e}")
 
+
 def send_emails(email_list):
     subject = "Your Email Subject Here"
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -49,6 +51,7 @@ def send_emails(email_list):
                 future.result()  # Ensure we check for any exceptions
             except Exception as e:
                 print(f"An error occurred: {e}")
+
 
 # Call the function to send emails using ThreadPoolExecutor
 send_emails(email_list)
