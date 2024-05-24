@@ -270,7 +270,6 @@ def send_delayed_mails(delay, job):
     store.jobs = jobs
 
 
-
 class MailJob:
     def __init__(self, _job_thread, _job):
         self.job_thread = _job_thread
@@ -332,6 +331,28 @@ def schedule_job(job_id):
                     # schedule job
                     mails_job_scheduler.schedule_job(job)
                     job['is_scheduled'] = True
+                    store['jobs'] = jobs_temp
+                    flash(f"Job[{job_id}] successfully scheduled!", 'success')
+                except Exception as e:
+                    flash(message=str(e), category='danger')
+            break
+
+    return redirect(url_for('jobs'))
+
+
+@app.route('/stop-schedules-job/<int:job_id>', methods=['GET'])
+@login_required
+def stop_scheduled_job(job_id):
+    jobs_temp = store['jobs']
+    for job in jobs_temp:
+        if job['id'] == job_id:
+            if job['is_scheduled'] is False:
+                flash(f"Job[{job_id}] is not scheduled!", 'warning')
+            else:
+                try:
+                    # TODO: IMPLEMENT STOP SCHEDULING LOGIC
+                    mails_job_scheduler.schedule_job(job)
+                    job['is_scheduled'] = False
                     store['jobs'] = jobs_temp
                     flash(f"Job[{job_id}] successfully scheduled!", 'success')
                 except Exception as e:
