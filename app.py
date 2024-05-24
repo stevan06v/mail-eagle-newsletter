@@ -255,7 +255,20 @@ def send_delayed_mails(delay, job):
     print(f"Starting job[{job['name']}] with delay: {delay}s")
     time.sleep(delay)
     send_mail(emails=job['list'])
-    # TODO: SET JOB-json is_scheduled = false, is_finished=true + redirect to show changes
+
+    # Update job status
+    job['is_finished'] = True
+    job['is_scheduled'] = False
+
+    # Update the job in the list
+    jobs = store.jobs
+    for i, existing_job in enumerate(jobs):
+        if existing_job['id'] == job['id']:
+            jobs[i] = job
+            break
+
+    store.jobs = jobs
+
 
 
 class MailJob:
@@ -315,11 +328,14 @@ def schedule_job(job_id):
             if job['is_scheduled']:
                 flash(f"Job[{job_id}] is already scheduled!", 'warning')
             else:
-                # schedule job
-                mails_job_scheduler.schedule_job(job)
-                job['is_scheduled'] = True
-                store['jobs'] = jobs_temp
-                flash(f"Job[{job_id}] successfully scheduled!", 'success')
+                try:
+                    # schedule job
+                    mails_job_scheduler.schedule_job(job)
+                    job['is_scheduled'] = True
+                    store['jobs'] = jobs_temp
+                    flash(f"Job[{job_id}] successfully scheduled!", 'success')
+                except Exception as e:
+                    flash(message=str(e), category='danger')
             break
 
     return redirect(url_for('jobs'))

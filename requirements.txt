@@ -6,4 +6,3 @@ wtforms
 python-jsonstore
 python-dotenv
 pandas
-schedule

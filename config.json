@@ -8,13 +8,13 @@
   "jobs": [
     {
       "id": 1,
-      "name": "Stevan Vlajic",
-      "subject": "hallo",
-      "is_scheduled": true,
+      "name": "fdasfdsa",
+      "subject": "fdfadsf",
+      "is_scheduled": false,
       "is_finished": false,
-      "csv_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/c7c00ca4-bd18-4dea-b714-a40348748742.csv",
-      "schedule_date": "05/21/2024 22:34:00",
-      "content_file_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/9756550b-be82-4bc9-b8e7-d1d260bba6fc.html",
+      "csv_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/800ae59d-043a-482d-95de-4c788acc3082.csv",
+      "schedule_date": "05/24/2024 11:32:00",
+      "content_file_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/d3c700a3-eb53-49e9-8d49-5bf0c675efc9.html",
       "list": [
         "info@0211bau.de",
         "info@classic-immobilien-gera.de",
