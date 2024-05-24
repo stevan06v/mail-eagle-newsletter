@@ -312,8 +312,15 @@ mails_job_scheduler = MailsJobScheduler()
 @app.route('/delete/<int:job_id>', methods=['POST'])
 @login_required
 def delete_job(job_id):
+    for job in store['jobs']:
+        if job['id'] == job_id:
+            os.remove(job['csv_path'])
+            os.remove(job['content_file_path'])
+            break
+
     store['jobs'] = [job for job in store['jobs'] if job['id'] != job_id]
     mails_job_scheduler.stop_job_thread(job_id)
+
     flash(f"Job[{job_id}] successfully deleted!", 'success')
     return redirect(url_for('jobs'))
 
@@ -340,7 +347,7 @@ def schedule_job(job_id):
     return redirect(url_for('jobs'))
 
 
-@app.route('/stop-schedules-job/<int:job_id>', methods=['GET'])
+@app.route('/stop-scheduled-job/<int:job_id>', methods=['GET'])
 @login_required
 def stop_scheduled_job(job_id):
     jobs_temp = store['jobs']
