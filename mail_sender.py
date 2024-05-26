@@ -49,20 +49,20 @@ def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_lis
 
 # Example usage:
 if __name__ == "__main__":
-    sender_email = "test@webhoch.com"
-    sender_password = "PE+ec5er:2^@1%"
-    smtp_server = "gnldm1070.siteground.biz"
+    sender_email = "noreply@newsletter-sana-bau.com"
+    sender_password = "1}25))5Pg{2b"
+    smtp_server = "es9.siteground.eu"
     smtp_port = 465
 
-    email_list = {
-        1: "michael.ruep@gmail.com",
-        2: "regeyam414@javnoi.com"
-    }
+    email_list = [
+        "michael.ruep@gmail.com",
+        "stevanvlajic5@gmail.com"
+    ]
 
     subject = "Your Email Subject Here 2"
 
-    with open('msg.txt', 'r', encoding='utf-8') as file:
+    with open('index.html', 'r', encoding='utf-8') as file:
         content = file.read()
 
-    send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, 1)
+    send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, 'index.html', 1)
     print("All HTML emails sent successfully.")

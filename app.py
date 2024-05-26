@@ -31,6 +31,23 @@ bootstrap = Bootstrap5(app)
 
 csrf = CSRFProtect(app)
 
+
+def get_blacklist(file_path='blacklist.txt'):
+    try:
+        with open(file_path, 'r') as file:
+            blacklist = file.readlines()
+        # Strip newline characters from each email address
+        blacklist = [email.strip() for email in blacklist]
+    except FileNotFoundError:
+        # Return an empty list if the file does not exist
+        blacklist = []
+    return blacklist
+
+
+def subtract_lists(list1, list2):
+    return [item for item in list1 if item not in list2]
+
+
 # Define a User model
 class User(UserMixin):
     def __init__(self, username, password):
@@ -209,7 +226,7 @@ def jobs():
                 "csv_path": csv_file_path,
                 "schedule_date": form.date.data.strftime('%m/%d/%Y %H:%M:%S'),
                 "content_file_path": content_file_path,
-                "list": parse_csv_column(csv_file_path, form.column.data)
+                "list": subtract_lists(parse_csv_column(csv_file_path, form.column.data), get_blacklist())
             }
 
             store['jobs'] += [job]
@@ -327,6 +344,8 @@ class MailsJobScheduler:
 mails_job_scheduler = MailsJobScheduler()
 
 
+
+
 def unsubscribe_email(email_dict, email_id):
     if email_id in email_dict:
         del email_dict[email_id]
@@ -340,8 +359,10 @@ def delete_job(job_id):
     # wipe junk leftover files
     for job in store['jobs']:
         if job['id'] == job_id:
-            os.remove(job['csv_path'])
-            os.remove(job['content_file_path'])
+            if os.path.exists(job['csv_path']):
+                os.remove(job['csv_path'])
+            if os.path.exists(job['content_file_path']):
+                os.remove(job['content_file_path'])
             break
 
     store['jobs'] = [job for job in store['jobs'] if job['id'] != job_id]
@@ -393,20 +414,29 @@ def stop_scheduled_job(job_id):
 
 @app.route('/abbestellen/<int:job_id>/<int:email_id>', methods=['GET'])
 def unsubscribe(job_id, email_id):
-    # Find the job
+
     job = next((job for job in store['jobs'] if job['id'] == job_id), None)
+
     if job:
-        # Unsubscribe the email
-        email_dict = job['list']
-        if email_id in email_dict:
-            del email_dict[email_id]
-            job['list'] = email_dict
+        email_list = job['list']
+        # Check if email_id is a valid index
+        if 0 <= email_id < len(email_list):
+            email_address = email_list[email_id]
+            del email_list[email_id]
+            job['list'] = email_list
             store['jobs'] = [job if j['id'] == job_id else j for j in store['jobs']]
-            return render_template('unsubscribe.html', message="You have successfully unsubscribed from the newsletter.")
+
+            # Append the email address to blacklist.txt
+            with open('blacklist.txt', 'a') as file:
+                file.write(email_address + '\n')
+
+            return render_template('unsubscribe.html',
+                                   message=f"You have successfully unsubscribed {email_address} from the newsletter.")
         else:
             return render_template('unsubscribe.html', message="Invalid email ID.")
     else:
         return render_template('unsubscribe.html', message="Invalid job ID.")
 
 
-app.run(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
