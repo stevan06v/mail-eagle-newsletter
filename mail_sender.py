@@ -28,6 +28,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
     except Exception as e:
         print(f"Failed to send email to {recipient_email}: {e}")
 
+
 def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Submit each email for sending concurrently
@@ -42,6 +43,7 @@ def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_lis
                 future.result()  # Ensure we check for any exceptions
             except Exception as e:
                 print(f"An error occurred: {e}")
+
 
 # Example usage:
 if __name__ == "__main__":

@@ -15,6 +15,8 @@ from wtforms.validators import DataRequired, Length, Regexp
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from secrets import compare_digest
 
+from mail_sender import send_emails
+
 load_dotenv()
 
 store = JsonStore('config.json')
@@ -246,16 +248,20 @@ def jobs():
     return render_template('jobs.html', form=form, table_data=table_data)
 
 
-def send_mail(emails):
-    # TODO: Implement Email-Sending-logic
-    print("sending....")
-    pass
-
-
 def send_delayed_mails(delay, job):
     print(f"Starting job[{job['name']}] with delay: {delay}s")
     time.sleep(delay)
-    send_mail(emails=job['list'])
+
+    send_emails(
+                smtp_server=store['email_sender.smtp_server'],
+                smtp_port=store['email_sender.smtp_port'],
+                sender_email=store['email_sender.sender_email'],
+                sender_password=store['email_sender.sender_password'],
+                email_list=job['list'],
+                subject=job['subject'],
+                content=job['content'],
+                job_id=job['id']
+    )
 
     # Update job status
     job['is_finished'] = True
@@ -307,7 +313,7 @@ class MailsJobScheduler:
         job_thread = threading.Thread(target=send_delayed_mails, args=(delay, job), daemon=True)
         job_thread.start()
 
-        mail_job = MailJob(job_thread, job)
+        mail_job = MailJob(None, job)
 
         self.mail_jobs.append(mail_job)
 
@@ -402,5 +408,6 @@ def unsubscribe(job_id, email_id):
             return render_template('unsubscribe.html', message="Invalid email ID.")
     else:
         return render_template('unsubscribe.html', message="Invalid job ID.")
+
 
 app.run(debug=True)
