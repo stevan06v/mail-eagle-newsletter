@@ -392,7 +392,7 @@ def stop_scheduled_job(job_id):
     return redirect(url_for('jobs'))
 
 
-@app.route('/unsubscribe/<int:job_id>/<int:email_id>', methods=['GET'])
+@app.route('/abbestellen/<int:job_id>/<int:email_id>', methods=['GET'])
 def unsubscribe(job_id, email_id):
     # Find the job
     job = next((job for job in store['jobs'] if job['id'] == job_id), None)
