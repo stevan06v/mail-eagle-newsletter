@@ -259,7 +259,7 @@ def send_delayed_mails(delay, job):
                 sender_password=store['email_sender.sender_password'],
                 email_list=job['list'],
                 subject=job['subject'],
-                content=job['content'],
+                content=job['content_file_path'],
                 job_id=job['id']
     )
 

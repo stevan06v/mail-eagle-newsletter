@@ -1,21 +1,22 @@
 {
   "email_sender": {
-    "smtp_server": "stevan.vlajic.com",
-    "smtp_port": 3455,
-    "sender_email": "stevanvlajic@gmail.com",
-    "sender_password": "Hallo"
+    "smtp_server": "gnldm1070.siteground.biz",
+    "smtp_port": 465,
+    "sender_email": "test@webhoch.com",
+    "sender_password": "PE+ec5er:2^@1%"
   },
   "jobs": [
     {
       "id": 1,
-      "name": "Stevan Vlajic",
-      "subject": "dffafdf",
-      "is_scheduled": true,
-      "is_finished": false,
-      "csv_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/305918e9-a0b5-43b1-9072-42f5fea42a64.csv",
-      "schedule_date": "05/26/2024 22:09:00",
-      "content_file_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/47918908-73c0-4884-b372-2eaa966f983b.html",
+      "name": "Test",
+      "subject": "fgfdg",
+      "is_scheduled": false,
+      "is_finished": true,
+      "csv_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/72d6a293-38e4-481b-98de-30f9cc020012.csv",
+      "schedule_date": "05/26/2024 22:42:00",
+      "content_file_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/cba7e709-d6d7-4228-b49c-dce44bedfc5c.html",
       "list": [
+        "stevanvlajic5@gmail.com"
       ]
     }
   ]

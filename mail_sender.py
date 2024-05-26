@@ -14,7 +14,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
         message['Subject'] = subject
 
         # Append the unsubscribe link to the content
-        unsubscribe_link = f"<center><p>Diese E-Mail würde gesendet an {recipient_email}.</p></center><br><center><p>Drücke <a href=\"https://sanabau.com/abbestellen/{job_id}/{email_id}\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
+        unsubscribe_link = f"<center><p>Diese E-Mail wurde gesendet an {recipient_email}.</p></center><br><center><p>Drücke <a href=\"https://sanabau.com/abbestellen/{job_id}/{email_id}\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
         html_content += unsubscribe_link
 
         html_part = MIMEText(html_content, 'html', 'utf-8')
@@ -34,9 +34,9 @@ def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_lis
         # Submit each email for sending concurrently
         futures = [
             executor.submit(send_html_email, smtp_server, smtp_port, sender_email, sender_password, email, subject, content, job_id, email_id)
-            for email_id, email in email_list.items()
+            for email_id, email in enumerate(email_list)
         ]
-        
+
         # Wait for all tasks to complete
         for future in concurrent.futures.as_completed(futures):
             try:
