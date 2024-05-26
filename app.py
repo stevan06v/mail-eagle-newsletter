@@ -147,24 +147,24 @@ class JobForm(FlaskForm):
 
 def parse_csv_column(csv_file_path, column_name):
     try:
-        email_dict = {}
+        column_data = []
         with open(csv_file_path, 'r') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')  # Specify the delimiter
             header = next(csv_reader)  # Get the header row
             if column_name in header:
                 column_index = header.index(column_name)
-                for idx, row in enumerate(csv_reader):
+                for row in csv_reader:
                     if 0 <= column_index < len(row):
-                        email_dict[idx] = row[column_index]
+                        column_data.append(row[column_index])
                     else:
                         raise IndexError(f"Column index {column_index} out of range.")
             else:
                 raise ValueError(f"Column '{column_name}' not found in CSV file header.")
 
-        return email_dict
+        return column_data
     except Exception as e:
         print(f"An error occurred: {e}")
-        return {}
+        return []
 
 
 class TableData:
