@@ -409,4 +409,4 @@ def unsubscribe(job_id, email_id):
         return render_template('unsubscribe.html', message="Invalid job ID.")
 
 
-app.run(host='0.0.0.0', port=80)
+app.run(debug=True)
