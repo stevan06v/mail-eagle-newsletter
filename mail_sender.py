@@ -6,7 +6,7 @@ import concurrent.futures
 
 context = ssl.create_default_context()
 
-def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recipient_email, subject, html_content, job_id, email_id):
+def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recipient_email, subject, content, job_id, email_id):
     try:
         message = MIMEMultipart()
         message['From'] = sender_email
@@ -14,7 +14,9 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
         message['Subject'] = subject
 
         # Append the unsubscribe link to the content
-        unsubscribe_link = f"<center><p>Diese E-Mail wurde gesendet an {recipient_email}.</p></center><br><center><p>Drücke <a href=\"https://sanabau.com/abbestellen/{job_id}/{email_id}\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
+        unsubscribe_link = f"<center><p>Diese E-Mail würde gesendet an {recipient_email}.</p></center><br><center><p>Drücke <a href=\"https://sanabau.com/abbestellen/{job_id}/{email_id}\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
+        with open(content, 'r', encoding='utf-8') as file:
+            html_content = file.read()
         html_content += unsubscribe_link
 
         html_part = MIMEText(html_content, 'html', 'utf-8')

@@ -31,7 +31,6 @@ bootstrap = Bootstrap5(app)
 
 csrf = CSRFProtect(app)
 
-
 # Define a User model
 class User(UserMixin):
     def __init__(self, username, password):
@@ -278,11 +277,10 @@ def send_delayed_mails(delay, job):
 
 
 class MailJob(threading.Thread):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, job, *args, **kwargs):
         super(MailJob, self).__init__(*args, **kwargs)
         self._stop = threading.Event()
-
-        # function using _stop function
+        self.job = job
 
     def stop(self):
         self._stop.set()
@@ -313,7 +311,7 @@ class MailsJobScheduler:
         job_thread = threading.Thread(target=send_delayed_mails, args=(delay, job), daemon=True)
         job_thread.start()
 
-        mail_job = MailJob(None, job)
+        mail_job = MailJob(job)
 
         self.mail_jobs.append(mail_job)
 
@@ -321,7 +319,8 @@ class MailsJobScheduler:
         for iterator in self.mail_jobs:
             if iterator.job["id"] == job_id:
                 self.mail_jobs = [mj for mj in self.mail_jobs if mj.job["id"] != job_id]
-                return iterator.stop_job_thread()
+                iterator.stop()
+                return True
         return False
 
 
@@ -410,4 +409,4 @@ def unsubscribe(job_id, email_id):
         return render_template('unsubscribe.html', message="Invalid job ID.")
 
 
-app.run(debug=True)
+app.run(host='0.0.0.0', port=80)

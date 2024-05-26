@@ -5,19 +5,5 @@
     "sender_email": "test@webhoch.com",
     "sender_password": "PE+ec5er:2^@1%"
   },
-  "jobs": [
-    {
-      "id": 1,
-      "name": "Test",
-      "subject": "fgfdg",
-      "is_scheduled": false,
-      "is_finished": true,
-      "csv_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/72d6a293-38e4-481b-98de-30f9cc020012.csv",
-      "schedule_date": "05/26/2024 22:42:00",
-      "content_file_path": "/Users/stevanvlajic/Desktop/maileagle-newsletter/uploads/cba7e709-d6d7-4228-b49c-dce44bedfc5c.html",
-      "list": [
-        "stevanvlajic5@gmail.com"
-      ]
-    }
-  ]
+  "jobs": []
 }
