@@ -2,48 +2,39 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import ssl
-import concurrent.futures  # Import ThreadPoolExecutor for multithreading
-
-sender_email = "test@webhoch.com"
-sender_password = "y4E4-11@m#1"
-smtp_server = "gnldm1070.siteground.biz"
-smtp_port = 465
-
-email_list = [
-    "michael.ruep@gmail.com",
-    "regeyam414@javnoi.com"
-]
-
-with open('msg.txt', 'r', encoding='utf-8') as file:
-    content = file.read()
+import concurrent.futures
 
 context = ssl.create_default_context()
 
-
-def send_html_email(recipient_email, subject, html_content):
+def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recipient_email, subject, html_content, job_id, email_id):
     try:
         message = MIMEMultipart()
         message['From'] = sender_email
         message['To'] = recipient_email
         message['Subject'] = subject
 
+        # Append the unsubscribe link to the content
+        unsubscribe_link = f"<center><p>Click <a href=\"http://yourserver/unsubscribe/{job_id}/{email_id}\" style=\"color: red; text-decoration: none;\">here</a> to unsubscribe</p></center>"
+        html_content += unsubscribe_link
+
         html_part = MIMEText(html_content, 'html', 'utf-8')
         message.attach(html_part)
 
         # Establish SMTP connection
         with smtplib.SMTP_SSL(smtp_server, smtp_port, context=context) as server:
-            server.login(sender_email, password)
+            server.login(sender_email, sender_password)
             server.sendmail(sender_email, recipient_email, message.as_string())
             print(f"Email sent to {recipient_email}")
     except Exception as e:
         print(f"Failed to send email to {recipient_email}: {e}")
 
-
-def send_emails(email_list):
-    subject = "Your Email Subject Here"
+def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Submit each email for sending concurrently
-        futures = [executor.submit(send_html_email, email, subject, html_message) for email in email_list]
+        futures = [
+            executor.submit(send_html_email, smtp_server, smtp_port, sender_email, sender_password, email, subject, content, job_id, email_id)
+            for email_id, email in email_list.items()
+        ]
         
         # Wait for all tasks to complete
         for future in concurrent.futures.as_completed(futures):
@@ -52,8 +43,22 @@ def send_emails(email_list):
             except Exception as e:
                 print(f"An error occurred: {e}")
 
+# Example usage:
+if __name__ == "__main__":
+    sender_email = "test@webhoch.com"
+    sender_password = "PE+ec5er:2^@1%"
+    smtp_server = "gnldm1070.siteground.biz"
+    smtp_port = 465
 
-# Call the function to send emails using ThreadPoolExecutor
-send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, jobid, emailid)
+    email_list = {
+        1: "michael.ruep@gmail.com",
+        2: "regeyam414@javnoi.com"
+    }
 
-print("All HTML emails sent successfully.")
+    subject = "Your Email Subject Here 2"
+
+    with open('msg.txt', 'r', encoding='utf-8') as file:
+        content = file.read()
+
+    send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, 1)
+    print("All HTML emails sent successfully.")
