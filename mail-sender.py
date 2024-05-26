@@ -5,17 +5,17 @@ import ssl
 import concurrent.futures  # Import ThreadPoolExecutor for multithreading
 
 sender_email = "test@webhoch.com"
-password = "y4E4-11@m#1"
+sender_password = "y4E4-11@m#1"
 smtp_server = "gnldm1070.siteground.biz"
 smtp_port = 465
 
-# Load email list from file
-with open('emaillist.txt', 'r') as file:
-    email_list = [line.strip() for line in file if line.strip()]
+email_list = [
+    "michael.ruep@gmail.com",
+    "regeyam414@javnoi.com"
+]
 
-# Read email message from file
 with open('msg.txt', 'r', encoding='utf-8') as file:
-    html_message = file.read()
+    content = file.read()
 
 context = ssl.create_default_context()
 
@@ -54,6 +54,6 @@ def send_emails(email_list):
 
 
 # Call the function to send emails using ThreadPoolExecutor
-send_emails(email_list)
+send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, jobid, emailid)
 
 print("All HTML emails sent successfully.")
