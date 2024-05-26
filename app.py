@@ -147,24 +147,24 @@ class JobForm(FlaskForm):
 
 def parse_csv_column(csv_file_path, column_name):
     try:
-        column_data = []
+        email_dict = {}
         with open(csv_file_path, 'r') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')  # Specify the delimiter
             header = next(csv_reader)  # Get the header row
             if column_name in header:
                 column_index = header.index(column_name)
-                for row in csv_reader:
+                for idx, row in enumerate(csv_reader):
                     if 0 <= column_index < len(row):
-                        column_data.append(row[column_index])
+                        email_dict[idx] = row[column_index]
                     else:
                         raise IndexError(f"Column index {column_index} out of range.")
             else:
                 raise ValueError(f"Column '{column_name}' not found in CSV file header.")
 
-        return column_data
+        return email_dict
     except Exception as e:
         print(f"An error occurred: {e}")
-        return []
+        return {}
 
 
 class TableData:
@@ -308,6 +308,14 @@ class MailsJobScheduler:
 
 mails_job_scheduler = MailsJobScheduler()
 
+def unsubscribe_email(email_dict, email_id):
+    if email_id in email_dict:
+        del email_dict[email_id]
+    else:
+        print(f"Email ID {email_id} not found.")
+
+
+
 
 @app.route('/delete/<int:job_id>', methods=['POST'])
 @login_required
@@ -368,5 +376,22 @@ def stop_scheduled_job(job_id):
 
     return redirect(url_for('jobs'))
 
+
+@app.route('/unsubscribe/<int:job_id>/<int:email_id>', methods=['GET'])
+def unsubscribe(job_id, email_id):
+    # Find the job
+    job = next((job for job in store['jobs'] if job['id'] == job_id), None)
+    if job:
+        # Unsubscribe the email
+        email_dict = job['list']
+        if email_id in email_dict:
+            del email_dict[email_id]
+            job['list'] = email_dict
+            store['jobs'] = [job if j['id'] == job_id else j for j in store['jobs']]
+            return render_template('unsubscribe.html', message="You have successfully unsubscribed from the newsletter.")
+        else:
+            return render_template('unsubscribe.html', message="Invalid email ID.")
+    else:
+        return render_template('unsubscribe.html', message="Invalid job ID.")
 
 app.run(debug=True)
