@@ -147,24 +147,24 @@ class JobForm(FlaskForm):
 
 def parse_csv_column(csv_file_path, column_name):
     try:
-        email_dict = {}
+        column_data = []
         with open(csv_file_path, 'r') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')  # Specify the delimiter
             header = next(csv_reader)  # Get the header row
             if column_name in header:
                 column_index = header.index(column_name)
-                for idx, row in enumerate(csv_reader):
+                for row in csv_reader:
                     if 0 <= column_index < len(row):
-                        email_dict[idx] = row[column_index]
+                        column_data.append(row[column_index])
                     else:
                         raise IndexError(f"Column index {column_index} out of range.")
             else:
                 raise ValueError(f"Column '{column_name}' not found in CSV file header.")
 
-        return email_dict
+        return column_data
     except Exception as e:
         print(f"An error occurred: {e}")
-        return {}
+        return []
 
 
 class TableData:
@@ -232,12 +232,13 @@ def jobs():
         for job in store['jobs']
     ]
 
-    titles = [('id', 'ID'),
-              ('name', 'Name'),
-              ('subject', 'Subject'),
-              ('schedule_date', 'Schedule Date'),
-              ('is_scheduled', 'Is Scheduled'),
-              ('is_finished', 'Is Finished'),
+    titles = [
+        ('id', 'ID'),
+        ('name', 'Name'),
+        ('subject', 'Subject'),
+        ('schedule_date', 'Schedule Date'),
+        ('is_scheduled', 'Is Scheduled'),
+        ('is_finished', 'Is Finished'),
     ]
 
     table_data = TableData(jobs_data, titles)
@@ -270,16 +271,25 @@ def send_delayed_mails(delay, job):
     store.jobs = jobs
 
 
-class MailJob:
-    def __init__(self, _job_thread, _job):
-        self.job_thread = _job_thread
-        self.job = _job
+class MailJob(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        super(MailJob, self).__init__(*args, **kwargs)
+        self._stop = threading.Event()
 
-    def stop_job_thread(self):
-        if self.job_thread.is_alive():
-            self.job_thread._stop()
-            return True
-        return False
+        # function using _stop function
+
+    def stop(self):
+        self._stop.set()
+
+    def stopped(self):
+        return self._stop.isSet()
+
+    def run(self):
+        while True:
+            if self.stopped():
+                return
+            print("Hello, world!")
+            time.sleep(1)
 
 
 class MailsJobScheduler:
@@ -288,12 +298,13 @@ class MailsJobScheduler:
 
     def schedule_job(self, job):
         now = datetime.now()
-        delay = (datetime.strptime(job["schedule_date"], "%m/%d/%Y %H:%M:%S") - now).total_seconds()
+        schedule_date = datetime.strptime(job["schedule_date"], "%m/%d/%Y %H:%M:%S")
+        delay = (schedule_date - now).total_seconds()
 
         if delay < 0:
             raise AttributeError('The target datetime is below the start time!')
 
-        job_thread = threading.Thread(target=send_delayed_mails, args=(delay, job, ), daemon=True)
+        job_thread = threading.Thread(target=send_delayed_mails, args=(delay, job), daemon=True)
         job_thread.start()
 
         mail_job = MailJob(job_thread, job)
@@ -302,11 +313,14 @@ class MailsJobScheduler:
 
     def stop_job_thread(self, job_id):
         for iterator in self.mail_jobs:
-            if iterator.job["job_id"] == job_id:
+            if iterator.job["id"] == job_id:
+                self.mail_jobs = [mj for mj in self.mail_jobs if mj.job["id"] != job_id]
                 return iterator.stop_job_thread()
+        return False
 
 
 mails_job_scheduler = MailsJobScheduler()
+
 
 def unsubscribe_email(email_dict, email_id):
     if email_id in email_dict:
@@ -315,11 +329,10 @@ def unsubscribe_email(email_dict, email_id):
         print(f"Email ID {email_id} not found.")
 
 
-
-
 @app.route('/delete/<int:job_id>', methods=['POST'])
 @login_required
 def delete_job(job_id):
+    # wipe junk leftover files
     for job in store['jobs']:
         if job['id'] == job_id:
             os.remove(job['csv_path'])
@@ -364,14 +377,10 @@ def stop_scheduled_job(job_id):
             if job['is_scheduled'] is False:
                 flash(f"Job[{job_id}] is not scheduled!", 'warning')
             else:
-                try:
-                    # TODO: IMPLEMENT STOP SCHEDULING LOGIC
-                    mails_job_scheduler.schedule_job(job)
-                    job['is_scheduled'] = False
-                    store['jobs'] = jobs_temp
-                    flash(f"Job[{job_id}] successfully scheduled!", 'success')
-                except Exception as e:
-                    flash(message=str(e), category='danger')
+                mails_job_scheduler.stop_job_thread(job)
+                job['is_scheduled'] = False
+                store['jobs'] = jobs_temp
+                flash(f"Successfully stopped scheduling of Job[{job['id']}].", 'success')
             break
 
     return redirect(url_for('jobs'))
