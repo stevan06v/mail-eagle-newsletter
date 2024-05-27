@@ -344,8 +344,6 @@ class MailsJobScheduler:
 mails_job_scheduler = MailsJobScheduler()
 
 
-
-
 def unsubscribe_email(email_dict, email_id):
     if email_id in email_dict:
         del email_dict[email_id]
