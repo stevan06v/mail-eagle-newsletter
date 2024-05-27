@@ -33,7 +33,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
         print(f"Failed to send email to {recipient_email}: {e}")
         return False  # Failure
 
-def send_emails_in_batches(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=400, wait_time=3600):
+def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=400, wait_time=3600):
     total_emails = len(email_list)
     batches = [email_list[i:i + batch_size] for i in range(0, total_emails, batch_size)]
     failed_emails = []
@@ -90,5 +90,5 @@ if __name__ == "__main__":
 
     subject = "Your Email Subject Here 2"
 
-    send_emails_in_batches(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, 'msg.txt', 1)
+    send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, 'msg.txt', 1)
     print("All HTML emails sent successfully.")
