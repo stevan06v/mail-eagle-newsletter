@@ -15,7 +15,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
         message['Subject'] = subject
 
         # Append the unsubscribe link to the content
-        unsubscribe_link = f"<p>Drücke <a href=\"http://130.61.138.88/abbestellen/{job_id}/{email_id}\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
+        unsubscribe_link = f"<center><p>Drücke <a href=\"http://130.61.138.88/abbestellen/{job_id}/{email_id}\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
         with open(content, 'r', encoding='utf-8') as file:
             html_content = file.read()
         html_content += unsubscribe_link
@@ -87,8 +87,14 @@ if __name__ == "__main__":
         "michael.ruep@gmail.com",
         "stevanvlajic5@gmail.com"
     ]
+    
+    email_list = [
+        "jonathan@webhoch.com",
+        "michael.ruep@gmail.com"
+    ]
 
-    subject = "Your Email Subject Here 2"
+
+    subject = "Hallo Joni :)"
 
     send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, 'msg.txt', 1)
     print("All HTML emails sent successfully.")
