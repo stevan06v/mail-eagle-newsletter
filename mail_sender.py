@@ -4,10 +4,11 @@ from email.mime.text import MIMEText
 import ssl
 import concurrent.futures
 import time
+import json
 
 context = ssl.create_default_context()
 
-def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recipient_email, subject, content, job_id, email_id):
+def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recipient_email, subject, content, job_id, email_id, delay):
     try:
         message = MIMEMultipart()
         message['From'] = sender_email
@@ -32,49 +33,75 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
     except Exception as e:
         print(f"Failed to send email to {recipient_email}: {e}")
         return False  # Failure
+    finally:
+        time.sleep(delay)
 
-def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=400, wait_time=3600):
+def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=400, wait_time=3600, delay=0.125):
     total_emails = len(email_list)
     batches = [email_list[i:i + batch_size] for i in range(0, total_emails, batch_size)]
     failed_emails = []
+    successful_emails = []
 
     for batch_number, batch in enumerate(batches):
         print(f"Sending batch {batch_number + 1}/{len(batches)} with {len(batch)} emails.")
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = {
-                executor.submit(send_html_email, smtp_server, smtp_port, sender_email, sender_password, email, subject, content, job_id, email_id): email
+                executor.submit(send_html_email, smtp_server, smtp_port, sender_email, sender_password, email, subject, content, job_id, email_id, delay): email
                 for email_id, email in enumerate(batch)
             }
 
             for future in concurrent.futures.as_completed(futures):
                 email = futures[future]
-                if not future.result():
+                if future.result():
+                    successful_emails.append(email)
+                else:
                     failed_emails.append(email)
 
         if batch_number < len(batches) - 1:
             print(f"Waiting for {wait_time / 3600} hour(s) before sending the next batch.")
             time.sleep(wait_time)
 
-    retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time)
+    retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time, delay)
 
-def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time):
+    # Save results to files
+    with open('successful_emails.json', 'w') as f:
+        json.dump(successful_emails, f)
+    with open('failed_emails.json', 'w') as f:
+        json.dump(failed_emails, f)
+
+def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time, delay):
     retry_attempts = 0
+    successful_emails = []
     while failed_emails:
         retry_attempts += 1
         print(f"Retrying failed emails, attempt {retry_attempts}.")
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = {
-                executor.submit(send_html_email, smtp_server, smtp_port, sender_email, sender_password, email, subject, content, job_id, email_id): email
+                executor.submit(send_html_email, smtp_server, smtp_port, sender_email, sender_password, email, subject, content, job_id, email_id, delay): email
                 for email_id, email in enumerate(failed_emails)
             }
 
-            failed_emails = [futures[future] for future in concurrent.futures.as_completed(futures) if not future.result()]
+            new_failed_emails = []
+            for future in concurrent.futures.as_completed(futures):
+                email = futures[future]
+                if future.result():
+                    successful_emails.append(email)
+                else:
+                    new_failed_emails.append(email)
+
+            failed_emails = new_failed_emails
 
         if failed_emails:
             print(f"Failed to send {len(failed_emails)} emails. Retrying after {wait_time / 3600} hour(s).")
             time.sleep(wait_time)
         else:
             print("All emails sent successfully after retry.")
+
+    # Save results to files
+    with open('successful_emails.json', 'a') as f:
+        json.dump(successful_emails, f)
+    with open('failed_emails.json', 'w') as f:
+        json.dump(failed_emails, f)
 
 # Example usage:
 if __name__ == "__main__":
@@ -84,15 +111,71 @@ if __name__ == "__main__":
     smtp_port = 465
 
     email_list = [
+        "stevanvlajic5@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
+        "michael.ruep@gmail.com",
         "michael.ruep@gmail.com",
         "stevanvlajic5@gmail.com"
     ]
-    
-    email_list = [
-        "jonathan@webhoch.com",
-        "michael.ruep@gmail.com"
-    ]
-
 
     subject = "Hallo Joni :)"
 
