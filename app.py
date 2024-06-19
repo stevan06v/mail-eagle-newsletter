@@ -6,15 +6,17 @@ from flask_wtf import FlaskForm, CSRFProtect
 from flask_wtf.file import FileAllowed, FileRequired
 from jsonstore import JsonStore
 import time
+import uuid
 from wtforms.fields import *
+import sched
 from dotenv import load_dotenv
 import threading
-from datetime import datetime
+from threading import Thread, Event
+from datetime import datetime, timedelta
 import uuid
 from wtforms.validators import DataRequired, Length, Regexp
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from secrets import compare_digest
-
 from mail_sender import send_emails
 
 load_dotenv()
@@ -30,6 +32,68 @@ login_manager = LoginManager(app)
 bootstrap = Bootstrap5(app)
 
 csrf = CSRFProtect(app)
+
+
+class TaskManager:
+    def __init__(self):
+        self.scheduler = sched.scheduler(time.time, time.sleep)
+        self.tasks = {}
+        self.lock = threading.Lock()
+
+    def start(self):
+        self.thread = threading.Thread(target=self.run, daemon=True)
+        self.thread.start()
+        print("Task Manager started.")
+
+    def run(self):
+        while True:
+            self.lock.acquire()
+            self.scheduler.run(blocking=False)
+            self.lock.release()
+            time.sleep(0.1)
+
+    def add_task(self, name, delay, priority, action, argument=()):
+        self.lock.acquire()
+        event = self.scheduler.enter(delay, priority, self.run_task, (name, action, argument))
+        self.tasks[name] = {'event': event, 'action': action, 'argument': argument}
+        self.lock.release()
+        print(f"Task '{name}' added with delay {delay} and priority {priority}.")
+
+    def remove_task(self, name):
+        self.lock.acquire()
+        if name in self.tasks:
+            event = self.tasks[name]['event']
+            self.scheduler.cancel(event)
+            del self.tasks[name]
+            print(f"Task '{name}' removed.")
+        else:
+            print(f"Task '{name}' not found.")
+        self.lock.release()
+
+    def list_tasks(self):
+        self.lock.acquire()
+        print("Current Tasks:")
+        for name, task_info in self.tasks.items():
+            print(f" - {name}: Action={task_info['action'].__name__}, Argument={task_info['argument']}")
+        self.lock.release()
+
+    def run_task(self, name, action, argument):
+        def task_wrapper():
+            print(f"Task '{name}' started.")
+            action(*argument)
+            print(f"Task '{name}' finished.")
+            self.lock.acquire()
+            if name in self.tasks:
+                del self.tasks[name]
+            self.lock.release()
+
+        thread = threading.Thread(target=task_wrapper, daemon=True)
+        thread.start()
+
+
+# init task-manager
+manager = TaskManager()
+manager.start()
 
 
 def get_blacklist(file_path='blacklist.txt'):
@@ -219,6 +283,7 @@ def jobs():
 
             job = {
                 "id": len(store['jobs']) + 1,
+                "job_uuid": str(uuid.uuid4()),
                 "name": form.name.data,
                 "subject": form.subject.data,
                 "is_scheduled": False,
@@ -264,86 +329,6 @@ def jobs():
     return render_template('jobs.html', form=form, table_data=table_data)
 
 
-def send_delayed_mails(delay, job):
-    print(f"Starting job[{job['name']}] with delay: {delay}s")
-    time.sleep(delay)
-
-    send_emails(
-                smtp_server=store['email_sender.smtp_server'],
-                smtp_port=store['email_sender.smtp_port'],
-                sender_email=store['email_sender.sender_email'],
-                sender_password=store['email_sender.sender_password'],
-                email_list=job['list'],
-                subject=job['subject'],
-                content=job['content_file_path'],
-                job_id=job['id']
-    )
-
-    # Update job status
-    job['is_finished'] = True
-    job['is_scheduled'] = False
-
-    # Update the job in the list
-    jobs = store.jobs
-    for i, existing_job in enumerate(jobs):
-        if existing_job['id'] == job['id']:
-            jobs[i] = job
-            break
-
-    store.jobs = jobs
-
-
-class MailJob(threading.Thread):
-    def __init__(self, job, *args, **kwargs):
-        super(MailJob, self).__init__(*args, **kwargs)
-        self._stop = threading.Event()
-        self.job = job
-
-    def stop(self):
-        self._stop.set()
-
-    def stopped(self):
-        return self._stop.isSet()
-
-    def run(self):
-        while True:
-            if self.stopped():
-                return
-            print("Hello, world!")
-            time.sleep(1)
-
-
-class MailsJobScheduler:
-    def __init__(self):
-        self.mail_jobs = []
-
-    def schedule_job(self, job):
-        now = datetime.now()
-        schedule_date = datetime.strptime(job["schedule_date"], "%m/%d/%Y %H:%M:%S")
-        delay = (schedule_date - now).total_seconds()
-
-        if delay < 0:
-            raise AttributeError('The target datetime is below the start time!')
-
-        job_thread = threading.Thread(target=send_delayed_mails, args=(delay, job), daemon=True)
-        job_thread.start()
-
-        mail_job = MailJob(job)
-
-        self.mail_jobs.append(mail_job)
-
-    def stop_job_thread(self, job_id):
-        for iterator in self.mail_jobs:
-            if iterator.job["id"] == job_id:
-                self.mail_jobs = [mj for mj in self.mail_jobs if mj.job["id"] != job_id]
-                iterator.stop()
-                return True
-        return False
-
-
-mails_job_scheduler = MailsJobScheduler()
-
-
 def unsubscribe_email(email_dict, email_id):
     if email_id in email_dict:
         del email_dict[email_id]
@@ -351,22 +336,31 @@ def unsubscribe_email(email_dict, email_id):
         print(f"Email ID {email_id} not found.")
 
 
+def get_job_by_id(job_id):
+    for job in store['jobs']:
+        if job['id'] == job_id:
+            return job
+    return None
+
+
+def delete_job_files(job):
+    if os.path.exists(job['csv_path']):
+        os.remove(job['csv_path'])
+    if os.path.exists(job['content_file_path']):
+        os.remove(job['content_file_path'])
+
+
 @app.route('/delete/<int:job_id>', methods=['POST'])
 @login_required
 def delete_job(job_id):
-    # wipe junk leftover files
-    for job in store['jobs']:
-        if job['id'] == job_id:
-            if os.path.exists(job['csv_path']):
-                os.remove(job['csv_path'])
-            if os.path.exists(job['content_file_path']):
-                os.remove(job['content_file_path'])
-            break
-
-    store['jobs'] = [job for job in store['jobs'] if job['id'] != job_id]
-    mails_job_scheduler.stop_job_thread(job_id)
-
-    flash(f"Job[{job_id}] successfully deleted!", 'success')
+    job = get_job_by_id(job_id)
+    if job:
+        delete_job_files(job)
+        store['jobs'] = [job for job in store['jobs'] if job['id'] != job_id]
+        manager.remove_task(job['job_uuid'])
+        flash(f"Job[{job_id}] successfully deleted!", 'success')
+    else:
+        flash(f"Job[{job_id}] not found!", 'error')
     return redirect(url_for('jobs'))
 
 
@@ -380,8 +374,24 @@ def schedule_job(job_id):
                 flash(f"Job[{job_id}] is already scheduled!", 'warning')
             else:
                 try:
-                    # schedule job
-                    mails_job_scheduler.schedule_job(job)
+                    delay = ((datetime
+                              .strptime(job["schedule_date"], "%m/%d/%Y %H:%M:%S") - datetime.now())
+                             .total_seconds())
+                    print(f"Delay: {delay}s...")
+
+                    email_args = {
+                        'smtp_server': store['email_sender.smtp_server'],
+                        'smtp_port': store['email_sender.smtp_port'],
+                        'sender_email': store['email_sender.sender_email'],
+                        'sender_password': store['email_sender.sender_password'],
+                        'email_list': job['list'],
+                        'subject': job['subject'],
+                        'content': job['content_file_path'],
+                        'job_id': job['id']
+                    }
+
+                    manager.add_task(job['job_uuid'], int(delay), 1, lambda: send_emails(**email_args))
+
                     job['is_scheduled'] = True
                     store['jobs'] = jobs_temp
                     flash(f"Job[{job_id}] successfully scheduled!", 'success')
@@ -401,7 +411,8 @@ def stop_scheduled_job(job_id):
             if job['is_scheduled'] is False:
                 flash(f"Job[{job_id}] is not scheduled!", 'warning')
             else:
-                mails_job_scheduler.stop_job_thread(job)
+                manager.remove_task(job['job_uuid'])
+
                 job['is_scheduled'] = False
                 store['jobs'] = jobs_temp
                 flash(f"Successfully stopped scheduling of Job[{job['id']}].", 'success')

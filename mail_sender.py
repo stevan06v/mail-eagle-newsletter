@@ -7,6 +7,7 @@ import json
 
 context = ssl.create_default_context()
 
+
 def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recipient_email, subject, content, job_id, email_id, delay):
     try:
         message = MIMEMultipart()
@@ -35,6 +36,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
     finally:
         time.sleep(delay)
 
+
 def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=400, wait_time=3600, delay=0.125):
     total_emails = len(email_list)
     batches = [email_list[i:i + batch_size] for i in range(0, total_emails, batch_size)]
@@ -61,6 +63,7 @@ def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_lis
         json.dump({"jobs": successful_emails}, f)
     with open('failed_emails.json', 'w') as f:
         json.dump({"jobs": failed_emails}, f)
+
 
 def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time, delay):
     retry_attempts = 0
@@ -90,6 +93,7 @@ def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, f
         json.dump({"jobs": successful_emails}, f)
     with open('failed_emails.json', 'w') as f:
         json.dump({"jobs": failed_emails}, f)
+
 
 # Example usage:
 if __name__ == "__main__":
