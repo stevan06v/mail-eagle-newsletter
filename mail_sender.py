@@ -1,4 +1,4 @@
-from pipes import quote
+from urllib.parse import quote
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
