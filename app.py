@@ -20,6 +20,7 @@ from secrets import compare_digest
 from mail_sender import send_emails
 from wtforms import EmailField, SubmitField
 from wtforms.validators import DataRequired
+from urllib.parse import unquote
 
 
 load_dotenv()
@@ -433,6 +434,9 @@ def abbestellen():
     form = UnsubscribeForm()
     if form.validate_on_submit():
         email_address = form.email.data
+        email = unquote(email);
+        email = email.strip()
+        email = email.lower()
         unsubscribed = False
 
         for job in store['jobs']:
@@ -456,6 +460,9 @@ def abbestellen():
 
 @app.route('/abbestellen/<email>', methods=['GET'])
 def unsubscribe(email):
+    email = unquote(email);
+    email = email.strip()
+    email = email.lower()
     unsubscribed = False
 
     for job in store['jobs']:
