@@ -1,3 +1,4 @@
+from pipes import quote
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -32,8 +33,10 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
         message['To'] = recipient_email
         message['Subject'] = subject
 
+        encoded_email = quote(recipient_email)
+
         # Append the unsubscribe link to the content
-        unsubscribe_link = f"<center><p>Drücke <a href=\"http://130.61.138.88/abbestellen/{job_id}/{email_id}\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
+        unsubscribe_link = f"<center><p>Drücke <a href=\"http://130.61.138.88/abbestellen/{encoded_email}\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
         with open(content, 'r', encoding='utf-8') as file:
             html_content = file.read()
         html_content += unsubscribe_link
