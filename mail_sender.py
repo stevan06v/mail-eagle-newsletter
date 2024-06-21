@@ -7,6 +7,23 @@ import json
 
 context = ssl.create_default_context()
 
+def update_config(job_id, successful_emails, failed_emails):
+    with open('config.json', 'r') as file:
+        config = json.load(file)
+
+    for job in config['jobs']:
+        if job['id'] == job_id:
+            if 'successful_emails' not in job:
+                job['successful_emails'] = []
+            if 'failed_emails' not in job:
+                job['failed_emails'] = []
+
+            job['successful_emails'].extend(successful_emails)
+            job['failed_emails'].extend(failed_emails)
+            break
+
+    with open('config.json', 'w') as file:
+        json.dump(config, file, indent=4)
 
 def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recipient_email, subject, content, job_id, email_id, delay):
     try:
@@ -36,50 +53,53 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
     finally:
         time.sleep(delay)
 
-
 def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=400, wait_time=3600, delay=0.125):
     total_emails = len(email_list)
     batches = [email_list[i:i + batch_size] for i in range(0, total_emails, batch_size)]
-    failed_emails = []
-    successful_emails = []
+    all_successful_emails = []
+    all_failed_emails = []
 
     for batch_number, batch in enumerate(batches):
         print(f"Sending batch {batch_number + 1}/{len(batches)} with {len(batch)} emails.")
+        successful_emails = []
+        failed_emails = []
+
         for email_id, email in enumerate(batch):
             success = send_html_email(smtp_server, smtp_port, sender_email, sender_password, email, subject, content, job_id, email_id, delay)
             if success:
-                successful_emails.append({"job_id": job_id, "email": email})
+                successful_emails.append(email)
             else:
-                failed_emails.append({"job_id": job_id, "email": email})
+                failed_emails.append(email)
+
+        update_config(job_id, successful_emails, failed_emails)
+        all_successful_emails.extend(successful_emails)
+        all_failed_emails.extend(failed_emails)
 
         if batch_number < len(batches) - 1:
             print(f"Waiting for {wait_time / 3600} hour(s) before sending the next batch.")
             time.sleep(wait_time)
 
-    retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time, delay)
-
-    # Save results to files
-    with open('successful_emails.json', 'w') as f:
-        json.dump({"jobs": successful_emails}, f)
-    with open('failed_emails.json', 'w') as f:
-        json.dump({"jobs": failed_emails}, f)
-
+    retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, all_failed_emails, subject, content, job_id, wait_time, delay)
 
 def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time, delay):
     retry_attempts = 0
-    successful_emails = []
+    all_successful_emails = []
+
     while failed_emails:
         retry_attempts += 1
         print(f"Retrying failed emails, attempt {retry_attempts}.")
+        successful_emails = []
         new_failed_emails = []
-        for email_id, entry in enumerate(failed_emails):
-            email = entry["email"]
+
+        for email_id, email in enumerate(failed_emails):
             success = send_html_email(smtp_server, smtp_port, sender_email, sender_password, email, subject, content, job_id, email_id, delay)
             if success:
-                successful_emails.append({"job_id": job_id, "email": email})
+                successful_emails.append(email)
             else:
-                new_failed_emails.append({"job_id": job_id, "email": email})
+                new_failed_emails.append(email)
 
+        update_config(job_id, successful_emails, new_failed_emails)
+        all_successful_emails.extend(successful_emails)
         failed_emails = new_failed_emails
 
         if failed_emails:
@@ -87,13 +107,6 @@ def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, f
             time.sleep(wait_time)
         else:
             print("All emails sent successfully after retry.")
-
-    # Save results to files
-    with open('successful_emails.json', 'a') as f:
-        json.dump({"jobs": successful_emails}, f)
-    with open('failed_emails.json', 'w') as f:
-        json.dump({"jobs": failed_emails}, f)
-
 
 # Example usage:
 if __name__ == "__main__":
@@ -104,58 +117,6 @@ if __name__ == "__main__":
 
     email_list = [
         "stevanvlajic5@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
         "michael.ruep@gmail.com",
         "michael.ruep@gmail.com",
         "michael.ruep@gmail.com",
