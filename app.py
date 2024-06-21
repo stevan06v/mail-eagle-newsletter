@@ -18,6 +18,9 @@ from wtforms.validators import DataRequired, Length, Regexp
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from secrets import compare_digest
 from mail_sender import send_emails
+from wtforms import EmailField, SubmitField
+from wtforms.validators import DataRequired
+
 
 load_dotenv()
 
@@ -146,6 +149,11 @@ class SenderEmailCredentials(FlaskForm):
     sender_password = PasswordField('Sender-Password', validators=[DataRequired()])
 
     submit = SubmitField()
+
+class UnsubscribeForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired()])
+    submit = SubmitField('Unsubscribe')
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -420,31 +428,52 @@ def stop_scheduled_job(job_id):
 
     return redirect(url_for('jobs'))
 
+@app.route('/abbestellen', methods=['GET', 'POST'])
+def abbestellen():
+    form = UnsubscribeForm()
+    if form.validate_on_submit():
+        email_address = form.email.data
+        unsubscribed = False
 
-@app.route('/abbestellen/<int:job_id>/<int:email_id>', methods=['GET'])
-def unsubscribe(job_id, email_id):
+        for job in store['jobs']:
+            if email_address in job['list']:
+                job['list'].remove(email_address)
+                store['jobs'] = [j if j['id'] != job['id'] else job for j in store['jobs']]
 
-    job = next((job for job in store['jobs'] if job['id'] == job_id), None)
+                # Append the email address to blacklist.txt
+                with open('blacklist.txt', 'a') as file:
+                    file.write(email_address + '\n')
 
-    if job:
-        email_list = job['list']
-        # Check if email_id is a valid index
-        if 0 <= email_id < len(email_list):
-            email_address = email_list[email_id]
-            del email_list[email_id]
-            job['list'] = email_list
-            store['jobs'] = [job if j['id'] == job_id else j for j in store['jobs']]
+                unsubscribed = True
 
-            # Append the email address to blacklist.txt
-            with open('blacklist.txt', 'a') as file:
-                file.write(email_address + '\n')
-
+        if unsubscribed:
             return render_template('unsubscribe.html',
                                    message=f"You have successfully unsubscribed {email_address} from the newsletter.")
         else:
-            return render_template('unsubscribe.html', message="Invalid email ID.")
+            return render_template('unsubscribe.html', message="Email address not found.")
+
+    return render_template('unsubscribe_form.html', form=form)
+
+@app.route('/abbestellen/<email>', methods=['GET'])
+def unsubscribe(email):
+    unsubscribed = False
+
+    for job in store['jobs']:
+        if email in job['list']:
+            job['list'].remove(email)
+            store['jobs'] = [j if j['id'] != job['id'] else job for j in store['jobs']]
+
+            # Append the email address to blacklist.txt
+            with open('blacklist.txt', 'a') as file:
+                file.write(email + '\n')
+
+            unsubscribed = True
+
+    if unsubscribed:
+        return render_template('unsubscribe.html',
+                               message=f"You have successfully unsubscribed {email} from the newsletter.")
     else:
-        return render_template('unsubscribe.html', message="Invalid job ID.")
+        return render_template('unsubscribe.html', message="Email address not found.")
 
 
 if __name__ == '__main__':
