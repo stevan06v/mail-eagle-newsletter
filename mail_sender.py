@@ -52,7 +52,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
             return True  # Success
     except Exception as e:
         print(f"Failed to send email to {recipient_email}: {e}")
-        return False  # Failure
+        return False
     finally:
         time.sleep(delay)
 

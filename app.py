@@ -458,6 +458,7 @@ def abbestellen():
 
     return render_template('unsubscribe_form.html', form=form)
 
+
 @app.route('/abbestellen/<email>', methods=['GET'])
 def unsubscribe(email):
     email = unquote(email);
