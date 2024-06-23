@@ -3,10 +3,24 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import ssl
+from jsonstore import JsonStore
 import time
 import json
 
 context = ssl.create_default_context()
+
+store = JsonStore('config.json')
+
+
+def get_job_by_id(job_id):
+    # disallow caching --> some fucked up shit code but works wonders :=)
+    global store
+    store = JsonStore('config.json')
+    for job in store['jobs']:
+        if job['id'] == job_id:
+            return job
+    return None
+
 
 def update_config(job_id, successful_emails, failed_emails):
     with open('config.json', 'r') as file:
@@ -25,6 +39,7 @@ def update_config(job_id, successful_emails, failed_emails):
 
     with open('config.json', 'w') as file:
         json.dump(config, file, indent=4)
+
 
 def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recipient_email, subject, content, job_id, email_id, delay):
     try:
@@ -56,6 +71,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
     finally:
         time.sleep(delay)
 
+
 def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=400, wait_time=3600, delay=0.125):
     total_emails = len(email_list)
     batches = [email_list[i:i + batch_size] for i in range(0, total_emails, batch_size)]
@@ -80,9 +96,11 @@ def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_lis
 
         if batch_number < len(batches) - 1:
             print(f"Waiting for {wait_time / 3600} hour(s) before sending the next batch.")
+
             time.sleep(wait_time)
 
     retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, all_failed_emails, subject, content, job_id, wait_time, delay)
+
 
 def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time, delay):
     retry_attempts = 0
@@ -110,6 +128,7 @@ def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, f
             time.sleep(wait_time)
         else:
             print("All emails sent successfully after retry.")
+
 
 # Example usage:
 if __name__ == "__main__":

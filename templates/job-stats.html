@@ -1,0 +1,39 @@
+<div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <button class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#jobStatistic" aria-expanded="true" aria-controls="jobStatistic">
+          Job Statistics
+        </button>
+      </h5>
+    </div>
+        <div id="jobStatistic" class="collapse show" aria-labelledby="headingOne">
+            <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card text-white bg-secondary">
+                        <div class="card-body">
+                            <h5 class="card-title">Total: </h5>
+                            <p class="card-text"><strong>{{ total_count }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <h5 class="card-title">Success: </h5>
+                            <p class="card-text"><strong>{{ success_count }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card text-white bg-danger">
+                        <div class="card-body">
+                            <h5 class="card-title">Failed: </h5>
+                            <p class="card-text"><strong>{{ failed_count }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

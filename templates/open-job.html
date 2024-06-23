@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1>Job Details</h1>
+<p>Get a detailed view of your selected job.</p>
+
+{% include 'job-stats.html' %}
+{% include 'job-information-card.html' %}
+{% include 'successful-emails-table.html' %}
+{% include 'failed-email-table.html' %}
+
+<a href="{{ url_for('jobs') }}" class="btn btn-primary">Back to Jobs</a>
+
+
+{% endblock %}

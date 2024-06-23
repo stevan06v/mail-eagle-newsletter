@@ -21,6 +21,10 @@ from mail_sender import send_emails
 from wtforms import EmailField, SubmitField
 from wtforms.validators import DataRequired
 from urllib.parse import unquote
+from flask import make_response
+from functools import wraps, update_wrapper
+from datetime import datetime
+
 
 
 load_dotenv()
@@ -151,10 +155,10 @@ class SenderEmailCredentials(FlaskForm):
 
     submit = SubmitField()
 
+
 class UnsubscribeForm(FlaskForm):
     email = EmailField('Email', validators=[DataRequired()])
     submit = SubmitField('Unsubscribe')
-
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -189,6 +193,33 @@ def index():
         return redirect('/login')
     else:
         return render_template('index.html')
+
+
+def read_blacklist():
+    blacklist_path = 'blacklist.txt'
+    if os.path.exists(blacklist_path):
+        with open(blacklist_path, 'r') as file:
+            lines = file.readlines()
+        return [{'id': idx + 1, 'entry': line.strip()} for idx, line in enumerate(lines)]
+    return []
+
+
+@app.route('/blacklist')
+def blacklist():
+    if not current_user.is_authenticated:
+        return redirect('/login')
+    else:
+        blacklist_data = read_blacklist()
+
+        titles = [
+            ('id', 'ID'),
+            ('entry', 'Blacklist Entry')
+        ]
+
+        # Convert to TableData format if needed
+        blacklist_table_data = TableData(blacklist_data, titles)
+
+        return render_template('blacklist.html', blacklist_data=blacklist_table_data)
 
 
 @app.route('/configure', methods=['GET', 'POST'])
@@ -300,7 +331,10 @@ def jobs():
                 "csv_path": csv_file_path,
                 "schedule_date": form.date.data.strftime('%m/%d/%Y %H:%M:%S'),
                 "content_file_path": content_file_path,
-                "list": subtract_lists(parse_csv_column(csv_file_path, form.column.data), get_blacklist())
+                "list": subtract_lists(parse_csv_column(csv_file_path, form.column.data), get_blacklist()),
+                "successful_emails": [],
+                "failed_emails": []
+
             }
 
             store['jobs'] += [job]
@@ -338,6 +372,49 @@ def jobs():
     return render_template('jobs.html', form=form, table_data=table_data)
 
 
+def nocache(view):
+    @wraps(view)
+    def no_cache(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers['Last-Modified'] = datetime.now()
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
+    return update_wrapper(no_cache, view)
+
+
+@app.route('/open/<int:job_id>', methods=['GET'])
+@login_required
+@nocache
+def open_job(job_id):
+    job = get_job_by_id(job_id)
+
+    if job:
+
+        successful_emails = [{'id': idx + 1, 'email': email} for idx, email in enumerate(job['successful_emails'])]
+        failed_emails = [{'id': idx + 1, 'email': email} for idx, email in enumerate(job['failed_emails'])]
+
+        titles = [
+            ('id', 'ID'),
+            ('email', 'Email')
+        ]
+
+        successful_emails_data = TableData(successful_emails, titles)
+        failed_emails_data = TableData(failed_emails, titles)
+
+        return render_template('open-job.html', job=job,
+                               successful_emails_data=successful_emails_data,
+                               failed_emails_data=failed_emails_data,
+                               failed_count=len(failed_emails) if failed_emails else 0,
+                               success_count=len(successful_emails) if successful_emails else 0,
+                               total_count=len(job['list']) if job['list'] else 0
+                               )
+    else:
+        flash(f"Job[{job_id}] not found!", 'error')
+        return redirect(url_for('jobs'))
+
+
 def unsubscribe_email(email_dict, email_id):
     if email_id in email_dict:
         del email_dict[email_id]
@@ -346,6 +423,9 @@ def unsubscribe_email(email_dict, email_id):
 
 
 def get_job_by_id(job_id):
+    # disallow caching --> some fucked up shit code but works wonders :=)
+    global store
+    store = JsonStore('config.json')
     for job in store['jobs']:
         if job['id'] == job_id:
             return job
@@ -366,7 +446,9 @@ def delete_job(job_id):
     if job:
         delete_job_files(job)
         store['jobs'] = [job for job in store['jobs'] if job['id'] != job_id]
+
         manager.remove_task(job['job_uuid'])
+
         flash(f"Job[{job_id}] successfully deleted!", 'success')
     else:
         flash(f"Job[{job_id}] not found!", 'error')
@@ -388,22 +470,25 @@ def schedule_job(job_id):
                              .total_seconds())
                     print(f"Delay: {delay}s...")
 
-                    email_args = {
-                        'smtp_server': store['email_sender.smtp_server'],
-                        'smtp_port': store['email_sender.smtp_port'],
-                        'sender_email': store['email_sender.sender_email'],
-                        'sender_password': store['email_sender.sender_password'],
-                        'email_list': job['list'],
-                        'subject': job['subject'],
-                        'content': job['content_file_path'],
-                        'job_id': job['id']
-                    }
+                    if delay <= 0:
+                        flash(f"Job[{job_id}] cannot be scheduled in the past!", 'danger')
+                    else:
+                        email_args = {
+                            'smtp_server': store['email_sender.smtp_server'],
+                            'smtp_port': store['email_sender.smtp_port'],
+                            'sender_email': store['email_sender.sender_email'],
+                            'sender_password': store['email_sender.sender_password'],
+                            'email_list': job['list'],
+                            'subject': job['subject'],
+                            'content': job['content_file_path'],
+                            'job_id': job['id']
+                        }
 
-                    manager.add_task(job['job_uuid'], int(delay), 1, lambda: send_emails(**email_args))
+                        manager.add_task(job['job_uuid'], int(delay), 1, lambda: send_emails(**email_args))
 
-                    job['is_scheduled'] = True
-                    store['jobs'] = jobs_temp
-                    flash(f"Job[{job_id}] successfully scheduled!", 'success')
+                        job['is_scheduled'] = True
+                        store['jobs'] = jobs_temp
+                        flash(f"Job[{job_id}] successfully scheduled!", 'success')
                 except Exception as e:
                     flash(message=str(e), category='danger')
             break

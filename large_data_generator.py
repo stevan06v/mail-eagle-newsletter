@@ -18,5 +18,6 @@ def append_random_emails_to_csv(file_path, num_emails=10000):
             status = 'okssss'
             csvwriter.writerow([email, deleted, status])
 
+
 # Use the function to append 10,000 random emails to test.csv
 append_random_emails_to_csv('test.csv')
