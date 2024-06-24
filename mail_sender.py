@@ -119,9 +119,9 @@ def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, f
             else:
                 new_failed_emails.append(email)
 
-        update_config(job_id, successful_emails, new_failed_emails)
         all_successful_emails.extend(successful_emails)
         failed_emails = new_failed_emails
+        update_config(job_id, successful_emails, new_failed_emails)
 
         if failed_emails:
             print(f"Failed to send {len(failed_emails)} emails. Retrying after {wait_time / 3600} hour(s).")
