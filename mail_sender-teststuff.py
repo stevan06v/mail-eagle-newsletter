@@ -57,6 +57,7 @@ def send_emails_in_batches(smtp_server, smtp_port, sender_email, sender_password
 
     retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time)
 
+
 def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, failed_emails, subject, content, job_id, wait_time):
     retry_attempts = 0
     while failed_emails:
