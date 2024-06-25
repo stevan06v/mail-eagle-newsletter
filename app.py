@@ -93,6 +93,12 @@ class TaskManager:
             logger.info(f"Task '{name}' started.")
             action(*argument)
             logger.info(f"Task '{name}' finished.")
+            job = get_job_by_uuid(name)
+            job['is_finished'] = True
+
+            store['jobs'] = [job for job in store['jobs'] if job['job_uuid'] != name]
+            store['jobs'] += [job]
+
             self.lock.acquire()
             if name in self.tasks:
                 del self.tasks[name]
@@ -503,10 +509,22 @@ def unsubscribe_email(email_dict, email_id):
         logger.error(f"Email ID {email_id} not found.")
 
 
-def get_job_by_id(job_id):
+def reload_store():
     # disallow caching --> some fucked up shit code but works wonders :=)
     global store
     store = JsonStore('config.json')
+
+
+def get_job_by_uuid(_uuid):
+    reload_store()
+    for job in store['jobs']:
+        if job['job_uuid'] == _uuid:
+            return job
+    return None
+
+
+def get_job_by_id(job_id):
+    reload_store()
     for job in store['jobs']:
         if job['id'] == job_id:
             return job
