@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
-
 {% block content %}
 
 <h1>Global Blacklist</h1>
 <p>Get a quick overview over everyone that has unsubscribed the newsletter.</p>
 
+{% include 'blacklist-csv-form.html' %}
+{% include 'blacklist-entry-form.html' %}
 
 {% include 'blacklist-table.html' %}
 

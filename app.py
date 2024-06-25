@@ -7,6 +7,7 @@ from flask_wtf.file import FileAllowed, FileRequired
 from jsonstore import JsonStore
 import time
 import uuid
+from werkzeug.utils import secure_filename
 from wtforms.fields import *
 import sched
 from dotenv import load_dotenv
@@ -154,6 +155,17 @@ class SenderEmailCredentials(FlaskForm):
     submit = SubmitField()
 
 
+class BlacklistEntryForm(FlaskForm):
+    entry = StringField('Blacklist Entry', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
+class BlacklistCSVForm(FlaskForm):
+    column = StringField('CSV Column', validators=[DataRequired()])
+    file = FileField('CSV File', validators=[DataRequired()])
+    submit = SubmitField('Upload')
+
+
 class UnsubscribeForm(FlaskForm):
     email = EmailField('Email', validators=[DataRequired()])
     submit = SubmitField('Unsubscribe')
@@ -202,7 +214,7 @@ def read_blacklist():
     return []
 
 
-@app.route('/blacklist')
+@app.route('/blacklist', methods=['GET'])
 def blacklist():
     if not current_user.is_authenticated:
         return redirect('/login')
@@ -214,11 +226,58 @@ def blacklist():
             ('entry', 'Blacklist Entry')
         ]
 
-        # Convert to TableData format if needed
         blacklist_table_data = TableData(blacklist_data, titles)
 
-        return render_template('blacklist.html', blacklist_data=blacklist_table_data)
+        entry_form = BlacklistEntryForm()
+        csv_form = BlacklistCSVForm()
 
+        return render_template('blacklist.html', blacklist_data=blacklist_table_data, entry_form=entry_form,
+                               csv_form=csv_form)
+
+
+def update_blacklist(entry):
+    if entry not in get_blacklist():
+        with open('blacklist.txt', 'a') as file:
+            file.write(entry + '\n')
+
+
+@app.route('/blacklist/text-entry', methods=['POST'])
+def blacklist_text_entry():
+    form = BlacklistEntryForm()
+    if form.validate_on_submit():
+        entry = form.entry.data
+        print(f'Received blacklist entry: {entry}')
+        flash("Successfully added blacklist entry!", 'success')
+    return redirect(url_for('blacklist'))
+
+
+@app.route('/blacklist/csv-upload', methods=['POST'])
+def blacklist_csv_upload():
+    form = BlacklistCSVForm()
+    if form.validate_on_submit():
+        column = form.column.data
+        file = form.file.data
+
+        try:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join('uploads', filename)
+            file.save(filepath)
+
+            with open(filepath, newline='') as csvfile:
+                reader = csv.DictReader(csvfile, delimiter=';')
+                for row in reader:
+                    update_blacklist(row[column])
+
+            flash("Successfully processed CSV file!", 'success')
+        except Exception as e:
+            flash(f"An error occurred: {str(e)}", 'danger')
+        finally:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+    else:
+        flash("Failed to upload CSV file. Please ensure the form is filled out correctly.", 'danger')
+
+    return redirect(url_for('blacklist'))
 
 @app.route('/configure', methods=['GET', 'POST'])
 @login_required

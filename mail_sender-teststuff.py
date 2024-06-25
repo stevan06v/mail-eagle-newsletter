@@ -23,7 +23,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
         html_part = MIMEText(html_content, 'html', 'utf-8')
         message.attach(html_part)
 
-        # Establish SMTP connection
+        # Establish SMTP connectionpy
         with smtplib.SMTP_SSL(smtp_server, smtp_port, context=context) as server:
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, recipient_email, message.as_string())
@@ -32,6 +32,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
     except Exception as e:
         print(f"Failed to send email to {recipient_email}: {e}")
         return False  # Failure
+
 
 def send_emails_in_batches(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=400, wait_time=3600):
     total_emails = len(email_list)

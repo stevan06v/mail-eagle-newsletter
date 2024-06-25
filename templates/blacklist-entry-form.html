@@ -1,0 +1,17 @@
+{% from 'bootstrap5/form.html' import render_form %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <button class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#blacklistEntryForm" aria-expanded="true" aria-controls="blacklistEntryForm">
+                Blacklist Entry Form
+            </button>
+        </h5>
+    </div>
+    <div id="blacklistEntryForm" class="collapse show" aria-labelledby="headingOne">
+        <div class="card-body">
+            <form method="POST" action="/blacklist/text-entry">
+                {{ render_form(entry_form) }}
+            </form>
+        </div>
+    </div>
+</div>
