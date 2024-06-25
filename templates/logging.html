@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .log-container {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 20px auto; /* Added margin for spacing */
+        position: relative; /* Make container relative for absolute positioning */
+    }
+    .log-item {
+        margin-bottom: 10px;
+        padding: 10px;
+        border-left: 4px solid transparent; /* Default border */
+    }
+    .log-item.error {
+        border-left-color: #f44336; /* Red border for errors */
+    }
+    .log-item.warning {
+        border-left-color: #ff9800; /* Orange border for warnings */
+    }
+    .log-item.info {
+        border-left-color: #2196F3; /* Blue border for info */
+    }
+    .log-item.debug {
+        border-left-color: #4CAF50; /* Green border for debug */
+    }
+    .log-item p {
+        margin: 5px 0;
+    }
+
+    /* Styling for the download button */
+    .download-button {
+        position: absolute;
+        top: 20px; /* Adjust top position */
+        right: 20px; /* Adjust right position */
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #0d6efd; /* Bootstrap 5 blue background */
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+    .download-button:hover {
+        background-color: #0b5ed7; /* Darker Bootstrap 5 blue on hover */
+    }
+</style>
+
+<div class="log-container">
+    <a href="{{ url_for('download_logs') }}" class="download-button">Download All Logs</a>
+
+    {% for log in logs %}
+        <div class="log-item {% if log.log_level == 'ERROR' %}error{% elif log.log_level == 'WARNING' %}warning{% elif log.log_level == 'DEBUG' %}debug{% else %}info{% endif %}">
+            <p><strong>{{ log.log_level }}:</strong> {{ log.message }}</p>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

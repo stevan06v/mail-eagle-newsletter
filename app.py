@@ -1,11 +1,13 @@
 import csv
 import os
 from flask_bootstrap import Bootstrap5
+from flask import send_file
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_wtf import FlaskForm, CSRFProtect
 from flask_wtf.file import FileAllowed, FileRequired
 from jsonstore import JsonStore
 import time
+import logging
 import uuid
 from werkzeug.utils import secure_filename
 from wtforms.fields import *
@@ -39,6 +41,10 @@ login_manager = LoginManager(app)
 bootstrap = Bootstrap5(app)
 
 csrf = CSRFProtect(app)
+logging.getLogger('werkzeug').disabled = True
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='mail-eagle.log', encoding='utf-8', level=logging.DEBUG)
 
 
 class TaskManager:
@@ -50,7 +56,6 @@ class TaskManager:
     def start(self):
         self.thread = threading.Thread(target=self.run, daemon=True)
         self.thread.start()
-        print("Task Manager started.")
 
     def run(self):
         while True:
@@ -64,7 +69,7 @@ class TaskManager:
         event = self.scheduler.enter(delay, priority, self.run_task, (name, action, argument))
         self.tasks[name] = {'event': event, 'action': action, 'argument': argument}
         self.lock.release()
-        print(f"Task '{name}' added with delay {delay} and priority {priority}.")
+        logger.info(f"Task '{name}' added with delay {delay}s and priority {priority}.")
 
     def remove_task(self, name):
         self.lock.acquire()
@@ -72,23 +77,22 @@ class TaskManager:
             event = self.tasks[name]['event']
             self.scheduler.cancel(event)
             del self.tasks[name]
-            print(f"Task '{name}' removed.")
+            logger.info(f"Task '{name}' removed.")
         else:
-            print(f"Task '{name}' not found.")
+            logger.info(f"Task '{name}' removed.")
         self.lock.release()
 
     def list_tasks(self):
         self.lock.acquire()
-        print("Current Tasks:")
         for name, task_info in self.tasks.items():
             print(f" - {name}: Action={task_info['action'].__name__}, Argument={task_info['argument']}")
         self.lock.release()
 
     def run_task(self, name, action, argument):
         def task_wrapper():
-            print(f"Task '{name}' started.")
+            logger.info(f"Task '{name}' started.")
             action(*argument)
-            print(f"Task '{name}' finished.")
+            logger.info(f"Task '{name}' finished.")
             self.lock.acquire()
             if name in self.tasks:
                 del self.tasks[name]
@@ -180,9 +184,9 @@ def login():
 
     if login_form.validate_on_submit():
         if user.username == login_form.username.data and compare_digest(user.password, login_form.password.data):
-            # Login the user
             login_user(user)
 
+            logger.info(f"Login attempt successful.")
             flash('Successfully logged in!')
             return redirect(url_for('index'))
         else:
@@ -246,7 +250,10 @@ def blacklist_text_entry():
     form = BlacklistEntryForm()
     if form.validate_on_submit():
         entry = form.entry.data
-        print(f'Received blacklist entry: {entry}')
+
+        update_blacklist(entry)
+
+        logger.info(f'Received blacklist entry: {entry}')
         flash("Successfully added blacklist entry!", 'success')
     return redirect(url_for('blacklist'))
 
@@ -268,16 +275,20 @@ def blacklist_csv_upload():
                 for row in reader:
                     update_blacklist(row[column])
 
+            logger.info(f'Successfully processed blacklist-CSV file!')
             flash("Successfully processed CSV file!", 'success')
         except Exception as e:
             flash(f"An error occurred: {str(e)}", 'danger')
+            logger.error(f'An error occurred: {str(e)}')
         finally:
             if os.path.exists(filepath):
                 os.remove(filepath)
     else:
+        logger.error(f'Failed to upload CSV file. Please ensure the form is filled out correctly.')
         flash("Failed to upload CSV file. Please ensure the form is filled out correctly.", 'danger')
 
     return redirect(url_for('blacklist'))
+
 
 @app.route('/configure', methods=['GET', 'POST'])
 @login_required
@@ -296,6 +307,7 @@ def configure():
         store['email_sender.sender_password'] = sender_password
 
         flash('Email sender configuration saved successfully!', 'success')
+        logger.info(f'Email sender configuration saved successfully!')
 
         return redirect(url_for('configure'))
 
@@ -328,8 +340,8 @@ def parse_csv_column(csv_file_path, column_name):
     try:
         column_data = []
         with open(csv_file_path, 'r') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=';')  # Specify the delimiter
-            header = next(csv_reader)  # Get the header row
+            csv_reader = csv.reader(csv_file, delimiter=';')
+            header = next(csv_reader)
             if column_name in header:
                 column_index = header.index(column_name)
                 for row in csv_reader:
@@ -338,6 +350,7 @@ def parse_csv_column(csv_file_path, column_name):
                     else:
                         raise IndexError(f"Column index {column_index} out of range.")
             else:
+                logger.error(f"Column '{column_name}' not found in CSV file header.")
                 raise ValueError(f"Column '{column_name}' not found in CSV file header.")
 
         return column_data
@@ -356,6 +369,11 @@ class TableData:
             yield item
 
 
+def remove_duplicates(lst):
+    seen = set()
+    return [x for x in lst if not (x in seen or seen.add(x))]
+
+
 @app.route('/jobs', methods=['GET', 'POST'])
 @login_required
 def jobs():
@@ -372,7 +390,6 @@ def jobs():
             csv_file_path = os.path.join(uploads_folder, csv_filename)
             content_file_path = os.path.join(uploads_folder, content_filename)
 
-            # Save files
             if csv_file:
                 csv_file.save(csv_file_path)
             if content_file:
@@ -388,10 +405,9 @@ def jobs():
                 "csv_path": csv_file_path,
                 "schedule_date": form.date.data.strftime('%m/%d/%Y %H:%M:%S'),
                 "content_file_path": content_file_path,
-                "list": subtract_lists(parse_csv_column(csv_file_path, form.column.data), get_blacklist()),
+                "list": remove_duplicates(subtract_lists(parse_csv_column(csv_file_path, form.column.data), get_blacklist())),
                 "successful_emails": [],
                 "failed_emails": []
-
             }
 
             store['jobs'] += [job]
@@ -399,9 +415,11 @@ def jobs():
             print(store['jobs'])
 
             flash("Successfully created job!", 'success')
+            logger.info(f"Successfully created job[{form.name.data}]!")
             return redirect(url_for('jobs'))
         except Exception as e:
             flash(f"An error occurred: {e}", 'error')
+            logger.error(f"An error occurred: {e} while creating job!")
 
     jobs_data = [
         {
@@ -451,6 +469,7 @@ def open_job(job_id):
 
         successful_emails = [{'id': idx + 1, 'email': email} for idx, email in enumerate(job['successful_emails'])]
         failed_emails = [{'id': idx + 1, 'email': email} for idx, email in enumerate(job['failed_emails'])]
+        emails = [{'id': idx + 1, 'email': email} for idx, email in enumerate(job['list'])]
 
         titles = [
             ('id', 'ID'),
@@ -459,24 +478,29 @@ def open_job(job_id):
 
         successful_emails_data = TableData(successful_emails, titles)
         failed_emails_data = TableData(failed_emails, titles)
+        emails_data = TableData(emails, titles)
 
         return render_template('open-job.html', job=job,
                                successful_emails_data=successful_emails_data,
                                failed_emails_data=failed_emails_data,
+                               emails_data=emails_data,
                                failed_count=len(failed_emails) if failed_emails else 0,
                                success_count=len(successful_emails) if successful_emails else 0,
                                total_count=len(job['list']) if job['list'] else 0
                                )
     else:
         flash(f"Job[{job_id}] not found!", 'error')
+        logger.error(f"Job[{job_id}] not found!")
         return redirect(url_for('jobs'))
 
 
 def unsubscribe_email(email_dict, email_id):
     if email_id in email_dict:
+        logger.info(f"{email_dict[email_id]} successfully unsubscribed!")
         del email_dict[email_id]
     else:
         print(f"Email ID {email_id} not found.")
+        logger.error(f"Email ID {email_id} not found.")
 
 
 def get_job_by_id(job_id):
@@ -507,8 +531,11 @@ def delete_job(job_id):
         manager.remove_task(job['job_uuid'])
 
         flash(f"Job[{job_id}] successfully deleted!", 'success')
+        logger.info(f"Job[{job_id}] successfully deleted!")
     else:
         flash(f"Job[{job_id}] not found!", 'error')
+        logger.error(f"Job[{job_id}] not found")
+
     return redirect(url_for('jobs'))
 
 
@@ -520,6 +547,7 @@ def schedule_job(job_id):
         if job['id'] == job_id:
             if job['is_scheduled']:
                 flash(f"Job[{job_id}] is already scheduled!", 'warning')
+                logger.warning(f"Job[{job_id}] is already scheduled!")
             else:
                 try:
                     delay = ((datetime
@@ -529,6 +557,7 @@ def schedule_job(job_id):
 
                     if delay <= 0:
                         flash(f"Job[{job_id}] cannot be scheduled in the past!", 'danger')
+                        logger.warning(f"Job[{job_id}] cannot be scheduled in the past!")
                     else:
                         email_args = {
                             'smtp_server': store['email_sender.smtp_server'],
@@ -546,6 +575,7 @@ def schedule_job(job_id):
                         job['is_scheduled'] = True
                         store['jobs'] = jobs_temp
                         flash(f"Job[{job_id}] successfully scheduled!", 'success')
+                        logger.info(f"Job[{job_id}] successfully scheduled!")
                 except Exception as e:
                     flash(message=str(e), category='danger')
             break
@@ -561,15 +591,18 @@ def stop_scheduled_job(job_id):
         if job['id'] == job_id:
             if job['is_scheduled'] is False:
                 flash(f"Job[{job_id}] is not scheduled!", 'warning')
+                logger.warning(f"Job[{job_id}] is not scheduled!")
             else:
                 manager.remove_task(job['job_uuid'])
 
                 job['is_scheduled'] = False
                 store['jobs'] = jobs_temp
                 flash(f"Successfully stopped scheduling of Job[{job['id']}].", 'success')
+                logger.info(f"Successfully stopped scheduling of Job[{job['id']}].")
             break
 
     return redirect(url_for('jobs'))
+
 
 @app.route('/abbestellen', methods=['GET', 'POST'])
 def abbestellen():
@@ -624,6 +657,65 @@ def unsubscribe(email):
                                message=f"You have successfully unsubscribed {email} from the newsletter.")
     else:
         return render_template('unsubscribe.html', message="Email address not found.")
+
+
+def parse_log_file(log_file):
+    logs = []
+
+    with open(log_file, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line:
+                parts = line.split(':', 2)
+                if len(parts) == 3:
+                    log_level_str = parts[0].strip()
+                    log_level = get_log_level(log_level_str)
+                    message = parts[2].strip()
+
+                    log_entry = {
+                        'log_level': log_level,
+                        'message': message
+                    }
+
+                    logs.append(log_entry)
+                else:
+                    logs.append({
+                        'log_level': 'UNKNOWN',
+                        'message': line
+                    })
+    return logs
+
+
+def get_log_level(log_level_str):
+    if log_level_str == 'ERROR' or log_level_str == 'ERR':
+        return 'ERROR'
+    elif log_level_str == 'DEBUG':
+        return 'DEBUG'
+    elif log_level_str == 'INFO':
+        return 'INFO'
+    elif log_level_str == 'WARNING' or log_level_str == 'WARN':
+        return 'WARNING'
+    else:
+        return 'UNKNOWN'
+
+
+@app.route('/logging')
+@login_required
+def logging():
+    if not current_user.is_authenticated:
+        return redirect('/login')
+    else:
+        logs = parse_log_file('mail-eagle.log')
+        print(logs)
+        return render_template('logging.html', logs=logs[-10:][::-1])
+
+
+@app.route('/download_logs')
+def download_logs():
+    log_file_path = 'mail-eagle.log'
+
+    # Send the log file as an attachment
+    return send_file(log_file_path, as_attachment=True)
 
 
 if __name__ == '__main__':
