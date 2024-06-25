@@ -11,7 +11,6 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         max-width: 800px;
         margin: 20px auto; /* Added margin for spacing */
-        position: relative; /* Make container relative for absolute positioning */
     }
     .log-item {
         margin-bottom: 10px;
@@ -36,15 +35,13 @@
 
     /* Styling for the download button */
     .download-button {
-        position: absolute;
-        top: 20px; /* Adjust top position */
-        right: 20px; /* Adjust right position */
         display: inline-block;
         padding: 10px 20px;
         background-color: #0d6efd; /* Bootstrap 5 blue background */
         color: white;
         text-decoration: none;
         border-radius: 5px;
+        margin-bottom: 20px; /* Space between button and log items */
         transition: background-color 0.3s;
     }
     .download-button:hover {
@@ -58,6 +55,11 @@
     {% for log in logs %}
         <div class="log-item {% if log.log_level == 'ERROR' %}error{% elif log.log_level == 'WARNING' %}warning{% elif log.log_level == 'DEBUG' %}debug{% else %}info{% endif %}">
             <p><strong>{{ log.log_level }}:</strong> {{ log.message }}</p>
+            {% if log.timestamp %}
+                <p>Occurred at: {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            {% else %}
+                <p>Occurred at: Unknown timestamp</p>
+            {% endif %}
         </div>
     {% endfor %}
 </div>

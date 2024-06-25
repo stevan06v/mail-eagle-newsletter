@@ -627,7 +627,7 @@ def abbestellen():
     form = UnsubscribeForm()
     if form.validate_on_submit():
         email_address = form.email.data
-        email = unquote(email);
+        email = unquote(email_address)
         email = email.strip()
         email = email.lower()
         unsubscribed = False
