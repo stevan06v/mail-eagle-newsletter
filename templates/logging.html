@@ -55,11 +55,7 @@
     {% for log in logs %}
         <div class="log-item {% if log.log_level == 'ERROR' %}error{% elif log.log_level == 'WARNING' %}warning{% elif log.log_level == 'DEBUG' %}debug{% else %}info{% endif %}">
             <p><strong>{{ log.log_level }}:</strong> {{ log.message }}</p>
-            {% if log.timestamp %}
-                <p>Occurred at: {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-            {% else %}
-                <p>Occurred at: Unknown timestamp</p>
-            {% endif %}
+
         </div>
     {% endfor %}
 </div>
