@@ -3,28 +3,7 @@
     "smtp_server": "gnldm1070.siteground.biz",
     "smtp_port": 465,
     "sender_email": "test@webhoch.com",
-    "sender_password": "test"
+    "sender_password": "fdsafdsafa"
   },
-  "jobs": [
-    {
-      "id": 1,
-      "job_uuid": "fc149f32-9d50-4cb9-af87-d5cd2feb6614",
-      "name": "Test",
-      "subject": "Hallo Welt",
-      "is_scheduled": true,
-      "is_finished": true,
-      "csv_path": "/Users/stevanvlajic/Desktop/mail-eagle-newsletter/uploads/da59f6f8-de97-46f5-afc3-00724c73918c.csv",
-      "schedule_date": "06/25/2024 13:08:00",
-      "content_file_path": "/Users/stevanvlajic/Desktop/mail-eagle-newsletter/uploads/357c7d64-c3d0-4108-8f3f-a6f34ebbe26e.html",
-      "list": [
-        "stevanvlajic5@gmail.com",
-        "jonathan@webhoch.com",
-        "michael.ruep@gmail.com"
-      ],
-      "successful_emails": [],
-      "failed_emails": [
-        "michael.ruep@gmail.com"
-      ]
-    }
-  ]
+  "jobs": []
 }

@@ -630,16 +630,14 @@ def abbestellen():
         email = unquote(email_address)
         email = email.strip()
         email = email.lower()
-        unsubscribed = False
+        unsubscribed = True
+
+        update_blacklist(email)
 
         for job in store['jobs']:
             if email_address in job['list']:
                 job['list'].remove(email_address)
                 store['jobs'] = [j if j['id'] != job['id'] else job for j in store['jobs']]
-
-                # Append the email address to blacklist.txt
-                with open('blacklist.txt', 'a') as file:
-                    file.write(email_address + '\n')
 
                 unsubscribed = True
 
@@ -654,20 +652,16 @@ def abbestellen():
 
 @app.route('/abbestellen/<email>', methods=['GET'])
 def unsubscribe(email):
-    email = unquote(email);
+    email = unquote(email)
     email = email.strip()
     email = email.lower()
-    unsubscribed = False
+    unsubscribed = True
+    update_blacklist(email)
 
     for job in store['jobs']:
         if email in job['list']:
             job['list'].remove(email)
             store['jobs'] = [j if j['id'] != job['id'] else job for j in store['jobs']]
-
-            # Append the email address to blacklist.txt
-            with open('blacklist.txt', 'a') as file:
-                file.write(email + '\n')
-
             unsubscribed = True
 
     if unsubscribed:
