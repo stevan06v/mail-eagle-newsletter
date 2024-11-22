@@ -57,7 +57,8 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
         message.attach(html_part)
 
         # Establish SMTP connection
-        with smtplib.SMTP_SSL(smtp_server, smtp_port, context=context) as server:
+        with smtplib.SMTP(smtp_server, smtp_port) as server: #, context=context
+            server.starttls()
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, recipient_email, message.as_string())
             print(f"Email sent to {recipient_email}")
@@ -139,23 +140,16 @@ def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, f
             print("All emails sent successfully after retry.")
             logger.info(f"[{job_id}]: All emails sent successfully after retry.")
 
-
-# Example usage:
 if __name__ == "__main__":
-    sender_email = "test@webhoch.com"
-    sender_password = "PE+ec5er:2^@1%"
-    smtp_server = "gnldm1070.siteground.biz"
-    smtp_port = 465
+    sender_email = "news@newsletter-sana-bau.de"
+    sender_password = "QF5hPY$25Ly4W!!uUz^S6csu8s%EgAkz^#012d*tM%7c#1&^j#G*1#pcW&W!Cmxa"
+    smtp_server = "78.46.226.32"
+    smtp_port = 55587
 
     email_list = [
-        "stevanvlajic5@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "michael.ruep@gmail.com",
-        "stevanvlajic5@gmail.com"
+        "hello@webhoch.at",
     ]
 
     subject = "Hallo Joni :)"
 
     send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, 'msg.txt', 1)
-    print("All HTML emails sent successfully.")

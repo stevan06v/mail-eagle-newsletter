@@ -482,9 +482,9 @@ def open_job(job_id):
             ('email', 'Email')
         ]
 
-        successful_emails_data = TableData(successful_emails, titles)
-        failed_emails_data = TableData(failed_emails, titles)
-        emails_data = TableData(emails, titles)
+        successful_emails_data = TableData(successful_emails[:50], titles)
+        failed_emails_data = TableData(failed_emails[:50], titles)
+        emails_data = TableData(emails[:50], titles)
 
         return render_template('open-job.html', job=job,
                                successful_emails_data=successful_emails_data,
@@ -720,7 +720,7 @@ def logging():
         logs = parse_log_file('mail-eagle.log')
         print(logs)
         return render_template('logging.html', logs=logs[-10:][::-1])
-
+    
 
 @app.route('/download_logs')
 def download_logs():
@@ -729,6 +729,5 @@ def download_logs():
     # Send the log file as an attachment
     return send_file(log_file_path, as_attachment=True)
 
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=4000)
