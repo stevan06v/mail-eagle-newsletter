@@ -13,6 +13,8 @@ mv .enx.example .env
 bash start.sh
 ```
 
+* http://0.0.0.0:4000/logging
+
 # RESOLVE ACCESS DENIED
 
 ```bash
