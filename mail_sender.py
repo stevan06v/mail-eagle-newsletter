@@ -141,13 +141,13 @@ def retry_failed_emails(smtp_server, smtp_port, sender_email, sender_password, f
             logger.info(f"[{job_id}]: All emails sent successfully after retry.")
 
 if __name__ == "__main__":
-    sender_email = "news@newsletter-sana-bau.de"
-    sender_password = "QF5hPY$25Ly4W!!uUz^S6csu8s%EgAkz^#012d*tM%7c#1&^j#G*1#pcW&W!Cmxa"
+    sender_email = "info@homa-bau.com"
+    sender_password = f"8@B%eD>AGtd8LM:" #"QF5hPY$25Ly4W!!uUz^S6csu8s%EgAkz^#012d*tM%7c#1&^j#G*1#pcW&W!Cmxa"
     smtp_server = "78.46.226.32"
     smtp_port = 55587
 
     email_list = [
-        "hello@webhoch.at",
+        "stevan@webhoch.com",
     ]
 
     subject = "Hallo Joni :)"
