@@ -72,7 +72,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
         time.sleep(delay)
 
 
-def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=400, wait_time=3600, delay=0.125):
+def send_emails(smtp_server, smtp_port, sender_email, sender_password, email_list, subject, content, job_id, batch_size=500, wait_time=1800, delay=0.125):
     total_emails = len(email_list)
     batches = [email_list[i:i + batch_size] for i in range(0, total_emails, batch_size)]
     all_successful_emails = []
