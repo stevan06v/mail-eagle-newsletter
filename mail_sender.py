@@ -48,7 +48,7 @@ def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recip
         encoded_email = quote(recipient_email)
 
         # Append the unsubscribe link to the content
-        unsubscribe_link = f"<center><p>Drücke <a href=\"http://78.46.226.32:4000/abbestellen/{encoded_email}\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
+        unsubscribe_link = f"<center><p>Drücke <a href=\"https://eu-submit.jotform.com/252227521165350\" style=\"color: red; text-decoration: none;\">hier</a> um den Newsletter abzubestellen.</p></center>"
         with open(content, 'r', encoding='utf-8') as file:
             html_content = file.read()
         html_content += unsubscribe_link
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     smtp_port = 55587
 
     email_list = [
-        "stevan@webhoch.com",
+        "stevan0901@protonmail.com",
     ]
 
     subject = "Hallo Joni :)"

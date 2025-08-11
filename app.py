@@ -346,7 +346,7 @@ def parse_csv_column(csv_file_path, column_name):
     try:
         column_data = []
         with open(csv_file_path, 'r') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=';')
+            csv_reader = csv.reader(csv_file, delimiter=',')
             header = next(csv_reader)
             if column_name in header:
                 column_index = header.index(column_name)
