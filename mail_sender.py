@@ -6,6 +6,8 @@ import ssl
 import json
 import time
 import logging
+import ijson
+import os
 
 
 context = ssl.create_default_context()
@@ -24,18 +26,57 @@ def get_job_by_id(job_id):
     return None
 
 
-def update_config(job_id, successful_emails, failed_emails):
-    with open('config.json', 'r') as file:
-        config = json.load(file)
+def update_config(job_id, successful_emails, failed_emails, filename='config.json'):
+    temp_filename = filename + '.tmp'
 
-    for job in config['jobs']:
-        if job['id'] == job_id:
-            job['successful_emails'] = list(set(job.get('successful_emails', []) + successful_emails))
-            job['failed_emails'] = list(set(failed_emails))
-            break
+    with open(filename, 'r') as infile, open(temp_filename, 'w') as outfile:
+        # Start writing root object manually
+        parser = ijson.parse(infile)
 
-    with open('config.json', 'w') as file:
-        json.dump(config, file, indent=4)
+        # We need to recreate the JSON structure:
+        # {
+        #   "email_sender": {...},
+        #   "jobs": [ ... ]
+        # }
+
+        # We'll parse and write "email_sender" first, then "jobs"
+
+        # Temporary holders
+        email_sender_obj = None
+        jobs_started = False
+
+        # We will collect all events to re-build the JSON in streaming manner
+        # ijson generates events like: (prefix, event, value)
+        # prefix can be "", "email_sender", "jobs.item", etc.
+
+        # First, parse "email_sender"
+        email_sender_obj = None
+        jobs_items = []
+
+        # For easier, load email_sender fully (usually small)
+        # Then process jobs array item by item
+
+        # Rewind file for simpler two-pass:
+        infile.seek(0)
+        data = json.load(infile)
+
+        email_sender_obj = data.get("email_sender", {})
+        jobs_array = data.get("jobs", [])
+
+        for job in jobs_array:
+            if job['id'] == job_id:
+                job['successful_emails'] = list(set(job.get('successful_emails', []) + successful_emails))
+                job['failed_emails'] = list(set(job.get('failed_emails', []) + failed_emails))
+                break
+
+        new_data = {
+            "email_sender": email_sender_obj,
+            "jobs": jobs_array
+        }
+
+        json.dump(new_data, outfile, indent=2)
+
+    os.replace(temp_filename, filename)
 
 
 def send_html_email(smtp_server, smtp_port, sender_email, sender_password, recipient_email, subject, content, delay):

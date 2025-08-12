@@ -6,5 +6,19 @@
     "sender_password": "8@B%eD>AGtd8LM:"
   },
   "jobs": [
+    {
+      "id": 1,
+      "job_uuid": "cacecaa3-b066-4dbe-bed4-91d1946777ce",
+      "name": "fadsfads",
+      "subject": "sfdskjfhads",
+      "is_scheduled": true,
+      "is_finished": true,
+      "csv_path": "/Users/stevanvlajic/Desktop/mail-eagle-newsletter/uploads/16d48773-cf52-40b9-86b6-d874291375b1.csv",
+      "schedule_date": "08/12/2025 18:36:00",
+      "content_file_path": "/Users/stevanvlajic/Desktop/mail-eagle-newsletter/uploads/942a01af-23a2-4127-8c77-3dfa542e63ba.html",
+      "list": [],
+      "successful_emails": [],
+      "failed_emails": []
+    }
   ]
 }

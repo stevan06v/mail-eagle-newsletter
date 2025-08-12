@@ -6,3 +6,4 @@ wtforms
 python-jsonstore
 python-dotenv
 pandas
+ijson
